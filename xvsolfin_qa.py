@@ -90,7 +90,7 @@ else:
 
 # Get the paths to the files
 old_sol = None
-for f in glob.glob(old + '/XVSOLFIN*.SNX'):
+for f in glob.glob(old + '/XVSOLFIN_*.SNX'):
     old_sol = f
 if old_sol is None:
     raise TypeError
@@ -100,12 +100,12 @@ for f in glob.glob(old + '/soln_*.snx'):
 if old_dis is None:
     raise TypeError
 new_sol = None
-for f in glob.glob(new + '/XVSOLFIN*.SNX'):
+for f in glob.glob(new + '/AUS0OPSSNX_*_SOL.SNX'):
     new_sol = f
 if new_sol is None:
     raise TypeError
 new_dis = None
-for f in glob.glob(new + '/soln_*.snx'):
+for f in glob.glob(new + '/AUS0OPSSNX_*_DSC.SNX'):
     new_dis = f
 if new_dis is None:
     raise TypeError
