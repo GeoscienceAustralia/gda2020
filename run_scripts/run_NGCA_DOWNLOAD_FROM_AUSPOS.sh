@@ -7,7 +7,7 @@ ARCHIVE=20240515
 JURIS="act"
 
 # IP Adress of Geodesy machine (sometimes this changes)
-IP_ADRESS=3.26.19.181
+IP_ADRESS=[IP ADRESS]
 
 # Commentary
 printf "\nWill run script to copy over files after AUSPOS processing.\n"
