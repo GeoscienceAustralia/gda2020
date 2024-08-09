@@ -25,7 +25,7 @@ if not os.path.exists('gda2020.dat'):
     sys.exit('The file of GDA2020 polygons is not in the working directory')
 
 # Get the input file name
-for f in glob.glob('XVSOLFIN*'):
+for f in glob.glob('AUS0OPSSNX_*_00U_SOL.SNX'):
     ifile = f
 try:
     ifile

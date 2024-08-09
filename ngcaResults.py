@@ -40,6 +40,11 @@ for item in ['log_4_submit.txt', 'selectRef.log', 'verifySub.log']:
     if os.path.isfile(target):
         os.system(sys_cmd)
 os.chdir('../')
+os.mkdir('other')
+os.chdir('other')
+os.system('cp /home/fedora/ngca/' + jur + '/' + date + '/nameChanges.dat ./' )
+os.system('cp /home/fedora/transTables/' + jur + 'TransTable*.csv ./' )
+os.chdir('../')
 sys_cmd = 'cp -r ../../' + jur + '/sinexFiles ./snx'
 os.system(sys_cmd)
 os.system('rm snx/*.SNX')
