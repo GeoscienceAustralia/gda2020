@@ -23,8 +23,8 @@ exciseStationsAPREF.py
 # Transform SINEX coordinates
 # - ITRF2020@2015.0 --> ITRF2014@2015.0
 # - Comment this out if APREF is ITRF2014
-printf "\nRunning transformSINEX.py, can take some time...\n"
-transformSINEX.py
+printf "\nRunning transformSINEX_APREF.py, can take some time...\n"
+transformSINEX_APREF.py
 
 # Create Type-B uncertanty file
 printf "\nRunning createTypeB.py...\n"
