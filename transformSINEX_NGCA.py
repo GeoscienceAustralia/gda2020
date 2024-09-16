@@ -14,10 +14,6 @@
 #
 # Output:         [sinex_name].SNX
 #
-# To Do:
-#           - If a TransformationSD object becomes available in GeodePy, there 
-#             is some grayed out code in transformSINEX_APREF.py which could 
-#             be used.
 
 ## ===
 # SETUP
@@ -31,9 +27,7 @@ import numpy as np
 from geodepy import gnss, transform, constants
 
 # Directory
-# - Get the path to the home directory and move to the working directory
-home = os.path.expanduser("~")
-os.chdir(home + '/PROJECTS/SINEX/NGCA_AUSPOS_ITRF2014_TO_ITRF2020/working')
+os.chdir('../sinexFiles')
 
 # Input file
 for f in glob.glob('*.SNX'):
@@ -228,3 +222,7 @@ for f in glob.glob('*.SNX'):
                     solutionMatrixEstimate=snx_block_solnMatrixEstimate,
                     solutionMatrixApriori=snx_block_solnMatrixApriori,
     )
+
+# Remove ITRF2020 SINEX files
+for f in glob.glob('*.ITRF2020'):
+    os.remove(f)

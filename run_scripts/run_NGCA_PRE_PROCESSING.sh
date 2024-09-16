@@ -1,11 +1,11 @@
 #!/usr/bin/bash
 
 # Archive
-ARCHIVE=20240515
+ARCHIVE=20240715
 
 # List of jurisdictions to loop through (largest to smallest)
-JURIS_LIST=("act" "tas" "vic" "sa" "nt" "qld" "nsw")
-#JURIS_LIST=("wa")
+JURIS_LIST=("tas" "vic" "sa" "wa" "nt" "qld" "nsw")
+#JURIS_LIST=("act")
 
 # Create automatic notes file (this will remove existing file)
 rm -f /home/fedora/ngca/auto_notes_$ARCHIVE.txt
