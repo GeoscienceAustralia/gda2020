@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 
 # APREF solution
-YYYYMMDD=20240323
+YYYYMMDD=20240713
 
 # Comments
 printf "\nAPREF solution selected: $YYYYMMDD...\n"
@@ -24,7 +24,7 @@ exciseStationsAPREF.py
 # - ITRF2020@2015.0 --> ITRF2014@2015.0
 # - Comment this out if APREF is ITRF2014
 printf "\nRunning transformSINEX.py, can take some time...\n"
-transformSINEX.py
+transformSINEX_APREF.py
 
 # Create Type-B uncertanty file
 printf "\nRunning createTypeB.py...\n"

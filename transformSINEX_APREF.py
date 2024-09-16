@@ -8,21 +8,15 @@
 # then will write out a new SINEX file. The input file is 
 # copied with .ITRF2020 suffix.
 #
+# If a TransformationSD object becomes available in GeodePy,
+# there is some grayed out code that will handle the transformation
+# of uncertainties.
+#
 # Transformation: ITRF2020@RefEpoch --> ITRF2014@RefEpoch
 #
 # Input:          AUS0OPSSNX_YYYYDDD_YYYYDDD_00U_SOL.SNX.AUS
 #
-# Output:         AUS0OPSSNX_YYYYDDD_YYYYDDD_00U_SOL.SNX.AUS
-#
-# To Do:
-#           - If a TransformationSD object becomes available in GeodePy,
-#             there is some grayed out code that will habdle the transformation
-#             of uncertainties. 
-#           - Various convenience functions were added to the gnss.py module. These
-#           - will need develpment to make them more generalised - e.g. changes in 
-#             upper/lower triangle, coordinates/velocities/, and documentation. In 
-#             addition to those, it would be udeful to investigate the performance 
-#             dataframes vs. other datatypes in the case of large SINEX files.  
+# Output:         AUS0OPSSNX_YYYYDDD_YYYYDDD_00U_SOL.SNX.AUS 
 
 ## ===
 # SETUP
@@ -223,10 +217,10 @@ snx_block_SolnMatrixEstimate = gnss.read_sinex_solution_matrix_estimate_block(if
 # Write SINEX 
 gnss.writeSINEX(
                 ifile,
-                snx_header,
-                snx_comments, 
-                snx_block_SiteID, 
-                snx_block_SolnEpochs, 
-                snx_block_SolnEstimate, 
-                snx_block_SolnMatrixEstimate
+                header=snx_header,
+                comment=snx_comments, 
+                siteID=snx_block_SiteID, 
+                solutionEpochs=snx_block_SolnEpochs, 
+                solutionEstimate=snx_block_SolnEstimate, 
+                solutionMatrixEstimate=snx_block_SolnMatrixEstimate
 )

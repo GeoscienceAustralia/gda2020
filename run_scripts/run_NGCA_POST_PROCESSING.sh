@@ -1,11 +1,11 @@
 #!/usr/bin/bash
 
 # Archive
-ARCHIVE=20240515
+ARCHIVE=20240715
 
 # List of jurisdictions to loop through (largest to smallest)
-#JURIS_LIST=("act" "tas" "vic" "sa" "nt" "wa" "qld" "nsw")
-JURIS_LIST=("act" "tas" "sa")
+JURIS_LIST=("act" "tas" "vic" "sa" "nt" "wa" "qld" "nsw")
+#JURIS_LIST=("act")
 
 # Commentary 
 printf "\nWill run script to organise NGCA files after the AUSPOS processing.\n"
@@ -27,6 +27,11 @@ for JURIS in ${JURIS_LIST[*]}; do
     # Revert station names back to what they were before processed
     printf "\nExecuting nameChanges.pl...\n"
     nameChanges.pl
+
+    # Coordinate transformation
+    # - ITRF2020 --> ITRF2014
+    printf "\nExecuting transformSINEX_NGCA.py...\n"
+    transformSINEX_NGCA.py
 
     # Remove stations outside of GDA2020 from NGCA 
     printf "\nExecuting exciseStationsNGCA.py...\n"
@@ -80,7 +85,7 @@ for JURIS in ${JURIS_LIST[*]}; do
     printf "\nExecuting fullAdjust.py...\n"
     fullAdjust.py
 
-    # Organise results (?)
+    # Organise results
     printf "\nExecuting ngcaResults.py...\n"
     ngcaResults.py
 
