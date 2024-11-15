@@ -24,7 +24,7 @@ import os
 import sys
 import pandas as pd
 import numpy as np
-from geodepy import gnss, transform, constants
+from geodepy import gnss, transform, constants, convert
 
 # Directory
 os.chdir('../sinexFiles')
@@ -88,6 +88,18 @@ for f in glob.glob('*.SNX'):
     # SOLUTION/ESTIMATE 
     # - dataframe
     df_solnEstimate = gnss.sinex2dataframe_solution_estimate(ifile)
+    
+    # Obtain the solution epoch
+    # - used later in transformation
+    date_string = df_solnEstimate.refEpoch[1]
+    yy = date_string[0:2]
+    doy = date_string[3:6]
+    if int(yy) >= 90:
+        yyyy = "19" + yy
+    else:
+        yyyy = "20" + yy
+    refEpoch_string = yyyy + doy
+    refEpoch = convert.yyyydoy_to_date(refEpoch_string)
 
     # SOLUTION/APRIORI
     # - dataframe
@@ -115,8 +127,8 @@ for f in glob.glob('*.SNX'):
     for i in range(len(Xi)):
     
         # Coordinate transformation
-        x, y, z, vcv = transform.conform7(Xi[i], Yi[i], Zi[i], constants.itrf2020_to_itrf2014)
-    
+        x, y, z, vcv = transform.conform14(Xi[i], Yi[i], Zi[i], refEpoch, constants.itrf2020_to_itrf2014)
+
         # Append to list
         X.append(x)
         Y.append(y)
@@ -166,8 +178,8 @@ for f in glob.glob('*.SNX'):
     for i in range(len(Xi)):
     
         # Coordinate transformation
-        x, y, z, vcv = transform.conform7(Xi[i], Yi[i], Zi[i], constants.itrf2020_to_itrf2014)
-    
+        x, y, z, vcv = transform.conform14(Xi[i], Yi[i], Zi[i], refEpoch, constants.itrf2020_to_itrf2014)
+
         # Append to list
         X.append(x)
         Y.append(y)
