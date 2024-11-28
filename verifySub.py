@@ -17,8 +17,6 @@ RinexAntLs.txt is created from the information contained in the RINEX
 headers and the log file lists all the RINEX files that were deleted
 """
 
-import sys
-
 import logging
 import re
 import os
@@ -166,13 +164,7 @@ for f in sorted(files):
         
         # Calculate the duration of the RINEX file
         if good:
-            duration = 0
-            total_excess = 0
-            for delta in deltas:
-                if delta >= sampling:
-                    duration += sampling
-                    excess = delta - sampling
-                    total_excess += excess
+            duration = len(deltas) * sampling
             # 05:59:00 hours in seconds
             if duration < 21540:
                 logging.info(f + ': RINEX duration is less than 6 hours ('
@@ -193,8 +185,7 @@ for f in sorted(files):
         
             # Write out: file name, start epoch, end epoch, duration, excess
             l = '{:12s} {} {} {:6d} {:<6d}\n'.\
-                format(f.upper(), epochs[0], epochs[-1], int(duration), 
-                       int(total_excess))
+                format(f.upper(), epochs[0], epochs[-1], int(duration))
             fout2.write(l)
         else:
             os.remove(f)
