@@ -4,7 +4,8 @@
 # DESCRIPTION
 # - This script will reupload the auspos_job.json file to the AUSPOS s3.
 # - It is used when jobs have failed to trigger.
-# - It will run the jobs listed in list.txt
+# - It will run the jobs listed in list.txt.
+# - It is aimed to run from the geodesy@[IP ADRESS] ec2.
 # - Format is one column for the list.txt file.
 #
 #   Example:
