@@ -2,9 +2,10 @@
 
 # ---
 # DESCRIPTION
-# - This script will reupload the auspos_job.json file to the AUSPOS s3.
-# - It is used when jobs have failed to trigger.
-# - It will run the jobs listed in list.txt.
+# - This script will download the SINEX files from AUSPOS s3.
+# - It can be used when jobs have failed to trigger and they
+#   have been reuploaded (reupload_auspos_job_from_list.sh).
+# - It will download SINEX from jobs listed in list.txt
 # - It is aimed to run from the geodesy@[IP ADRESS] ec2.
 # - Format is one column for the list.txt file.
 #
@@ -21,9 +22,9 @@ INPUT_LIST=${DIR}/list.txt
 cd ${DIR}
 
 # ---
-# RUN LOOP TO REUPLOAD JOBS
+# RUN LOOP TO DOWNLOAD JOBS
 
-echo "--- START REUPLOAD"
+echo "--- START DOWNLOAD"
 
 while read line; do
 
@@ -32,16 +33,11 @@ while read line; do
         echo "${JOB}"
 
         # Download the file from s3
-        aws s3 cp s3://auspos-test-prod/uploads/${JOB}/auspos_job.json ${DIR}/auspos_job.json
-
-        # Upload the file back to s3 (to trigger AUSPOS job)
-        aws s3 cp ${DIR}/auspos_job.json s3://auspos-test-prod/uploads/${JOB}/auspos_job.json
+        aws s3 cp s3://auspos-test-prod/uploads/${JOB}/ ${DIR}/sinex --recursive  --exclude "*" --include "*-*.SNX"
 
 done < "${INPUT_LIST}"
 
 # ---
 # FINISH
 
-rm auspos_job.json
-
-echo "--- REUPLOAD COMPLETE"
+echo "--- DOWNLOAD COMPLETE"
