@@ -6,12 +6,12 @@
 #   the 'solutions' folder in the archive.
 # - It will also change the name to the cluster ID format identified
 #   in the log_4_submit.txt file.
-# - The log_4_submit file should be copied into the 'reupload' folder.
+# - The log_4_submit file needs to exist in the archive directory.
 # - It can be used when jobs have failed to trigger and they
 #   have been reuploaded (reupload_auspos_job_from_list.sh) and
 #   then redownloaded (download_auspos_jobs_from_list.sh).
 # - It is aimed to run from the geodesy@[IP ADRESS] ec2.
-# - It will move SINEX from jobs listed in list.txt
+# - It will move SINEX from jobs listed in list.txt.
 # - Format is one column for the list.txt file.
 #
 #   Example:
@@ -25,6 +25,10 @@
 DIR=/data/craig/reupload
 INPUT_LIST=${DIR}/list.txt
 cd ${DIR}
+
+# Organise
+cd ${DIR}
+mv ../${DATE}/log_4_submit.txt ./
 
 # ---
 # RUN LOOP TO MOVE SINEX
