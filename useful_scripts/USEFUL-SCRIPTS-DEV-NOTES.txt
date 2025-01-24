@@ -1,0 +1,108 @@
+==============
+USEFUL SCRIPTS - Notes
+==============
+
+------
+FOLDER - /useful_scripts/NGCA
+------
+
+--- Summary
+
+	* These scripts were developed to handle a rare NGCA/AUSPOS issue.
+	* The issue is when jobs are submitted, but AWS/AUSPOS does not
+	  trigger the job to process. This means there is no solution to 
+	  download. This issue has recently been caused by a lack of AWS ec2s
+	  being available at the time of submission. GNSS Analysis section are
+	  working on mitigating this. Nonetheless, these scripts may be helpful
+	  for future issues so user does not have to manually rerun jobs. 
+	* They are bash scripts and aimed to be run from the geodesy[IP ADDRESS]
+	  ec2. 
+
+------
+FOLDER  - /useful_scripts/QAQC
+------
+
+--- Summary
+
+	* These scripts were developed for QA/QC of GDA2020 update process.
+	* They rely on functions from the 'functions' folder.
+	* It is in development and operates on:
+		- The GDA2020 constraints post-processed APREF solution (apref_summary.jl)
+		- The NGCA solutions (ngca_jur_summary.jl)
+		- The NADJ solutions (nadj_summary.jl)
+	* They were written in the Julia programming laguage. It was planned to translate 
+	  these to Python and add them to official repository when time allowed. For now
+	  though, they are located here as useful scripts so they aren't mixed with the 
+      operational scripts. 	  
+	* There was some work into a JADJ QA/QC script, but it is in development and
+	  not worth placing here. 
+	* There is a Julia programming language setup guide below.
+	* These scripts are designed to be run on a seperate machine than the operation
+	  processing machines. They download solutions from the operations s3 bucket 
+	  (e.g. s3://gda2020-ngca/ngcaResults/ for the NGCA script). 
+
+
+--- Julia programmiing language 
+	
+	* Assumes user is working on Linux machine.
+	* Instructions are Bash terminal commands.
+	
+	-----
+	Setup - in terminal
+	-----
+
+	# Download Julia:
+		>>> wget https://julialang-s3.julialang.org/bin/linux/x64/1.11/julia-1.11.3-linux-x86_64.tar.gz
+		>>> tar -xvzf julia-1.11.3-linux-x86_64.tar.gz
+		>>> rm julia-1.11.3-linux-x86_64.tar.gz
+		
+		Note: May need to update the version/Hyperlink to work with latest stable release (https://julialang.org/downloads/)
+			  
+	# Setup path:
+		>>> vim ~/.bashrc
+		Add this line to file: export PATH="$PATH:/home/ec2-user/SOFTWARE/Julia/julia-1.11.3/bin"
+		>>> :wq
+		>>> source ~/.bashrc
+	
+	# Confirm installation:
+		>>> julia
+		>>> exit()
+	
+	# Setup Julia project environment (for packages):
+		>>> julia
+		>>> ]
+		>>> activate juliaENV
+		>>> add LinearAlgebra
+		>>> "Backspace"
+		>>> exit()
+	
+	-------------
+	General Usage - in terminal
+	-------------
+
+	# Start/close:
+		>>> julia	
+		>>> exit()
+		
+	# Open/close package manager mode:
+		>>> ]
+		>>> "Backspace"
+		
+	# To access "Help Mode" (info on functions):
+		>>> ?
+		>>> function
+
+	# Create Julia project environment and install a package:
+
+	Open Julia:						>>> julia
+	Enter package manager mode:		>>> ]
+	Create/activate project:		>>> activate juliaENV
+	Add a package:					>>> add LinearAlgebra
+	Close package manager mode:		>>> "Backspace"
+	Close Julia 					>>> exit()
+	
+	- Now if this project is activated in the future, it will have the package installed.
+
+	
+	
+
