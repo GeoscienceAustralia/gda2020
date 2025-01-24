@@ -52,14 +52,15 @@ include("/home/ec2-user/REPOSITORY/Geodesy-Tools/qaqc_operations.jl")
 # - date of solution 1
 # - date of solution 2
 # - RVS file
+# - IGS file (_CRD.SNX, _DSC.SNX are added to this)
 # - working directory
 # - Reference epoch of IGS file
 # - IGS transformation condition (ITRF2020-->ITRF2014)
 # - Save coordinate comparison lists to file (APREF, RVS, IGS)
-date1 = "20240713_ITRF2020"
-date2 = "20220716_CURRENT"
+date1 = "20240713"
+date2 = "20220716"
 rvs_file = "RVS_GDA2020.txt"
-igs_file = "IGS0OPSSNX_1994002_2024216_00U_CRD.csv"
+igs_file = "IGS0OPSSNX_1994002_2024216_00U"
 main_dir = "/home/ec2-user/PROJECTS/GDA2020-QAQC/APREF/PROD"
 igsRefEpoch = 2015.0
 igsTransformation = true
@@ -80,7 +81,8 @@ sinex_fp2 = "$(input_dir)/$(sinex_file2)"
 snx_disconts_fp1 = "$(input_dir)/$(snx_disconts_file1)"
 snx_disconts_fp2 = "$(input_dir)/$(snx_disconts_file2)"
 rvs_fp = "$(main_dir)/other/$(rvs_file)"
-igs_fp = "$(igs_dir)/$(igs_file)"
+igs_sol_fp = "$(igs_dir)/$(igs_file)_CRD.SNX"
+igs_dsc_fp = "$(igs_dir)/$(igs_file)_DSC.SNX"
 
 # Logging
 @info("$(now()) - === APREF SUMMARY BEGIN ===")
@@ -101,7 +103,7 @@ igs_fp = "$(igs_dir)/$(igs_file)"
 # Dataframe
 df1 = sinex2dataframe(sinex_fp1, false, false, "$snx_disconts_fp1")
 df2 = sinex2dataframe(sinex_fp2, false, false, "$snx_disconts_fp2")
-df_igs = CSV.read(igs_fp, DataFrame)
+df_igs = sinex2dataframe(igs_sol_fp, false, false, igs_dsc_fp)
 df_rvs = CSV.read(rvs_fp, DataFrame)
 
 # Organise
@@ -376,7 +378,7 @@ pretty_table(f, sort(df_rvsDeltaDisplay, order(:distance3D, rev=true))[1:10,:],
 )
 
 @printf(f, "\n------------------------ TEN LARGEST COORDINATE CHANGES (IGS) ------------------------\n")
-@printf(f, "* In comparison to IGS stations (%s.SNX)\n\n", igs_file)
+@printf(f, "* In comparison to IGS stations (%s_CRD.SNX)\n\n", igs_file)
 
 pretty_table(
               f, 
