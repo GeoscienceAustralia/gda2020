@@ -51,8 +51,8 @@ STEP 2 - Post-process the APREF cumulative solution
 	>>> cd /home/fedora/run_scripts/
 	>>> vim run_APREF_STEP_2.sh 
 		
-		NOW: edit the APREF solution date at top of script.
-		
+	NOW: edit the APREF solution date at top of script.
+	
 	>>> [ESC] :wq	
 	>>> nohup ./run_APREF_STEP_2.sh &
 
@@ -61,10 +61,12 @@ STEP 3 - Upload post-processed APREF
 ------
 	
 	# On GDA2020 machine: If exists, delete the old version in /home/fedora/apref/ 
-	>>> cd /home/fedora/apref/
-	>>> rm apref* disconts*
+	
+		>>> cd /home/fedora/apref/
+		>>> rm apref* disconts*
 	
 	# On GDA2020 machine: Setup the new apref version
+	
 		>>> cd /home/fedora/apref/YYYYMMDD
 		>>> cp apref* disconts* ../
 		>>> cd ../
@@ -83,8 +85,9 @@ STEP 4 - Copy post-processed APREF 30 NADJ machine
 ------
 
 	# On NADJ machine: Delete the old apref version
-	>>> cd /home/fedora/Data/
-	>>> rm apref* disconts* 
+	
+		>>> cd /home/fedora/Data/
+		>>> rm apref* disconts* 
 		
 		This should be:
 			- aprefYYYYMMDD.disconts
@@ -99,15 +102,17 @@ STEP 4 - Copy post-processed APREF 30 NADJ machine
 	
 	
 	# On NADJ machine: Download the new apref version
-	>>> aws s3 cp s3://gda2020-ngca/adjustmentData/ --recursive --exclude "*" --include "apref*"
-	>>> aws s3 cp s3://gda2020-ngca/adjustmentData/ --recursive --exclude "*" --include "disconts*"
-	>>> rm aprefYYYYMMDD.rvs		
+		
+		>>> aws s3 cp s3://gda2020-ngca/adjustmentData/ --recursive --exclude "*" --include "apref*"
+		>>> aws s3 cp s3://gda2020-ngca/adjustmentData/ --recursive --exclude "*" --include "disconts*"
+		>>> rm aprefYYYYMMDD.rvs		
 	
 	# On NADJ machine:
-	>>> dnaimport -n aprefRename_ aprefYYYYMMDD.snx --discontinuity-file   discontsYYYYMMDD.snx --export-xml
-	>>> rm aprefRename_.*
-	>>> mkdir apref/YYYYMMDD 
-	>>> cp aprefYYYYMMDD* discontsYYYYMMDD.snx aprefRename* apref/YYYYMMDD 
+	
+		>>> dnaimport -n aprefRename_ aprefYYYYMMDD.snx --discontinuity-file   discontsYYYYMMDD.snx --export-xml
+		>>> rm aprefRename_.*
+		>>> mkdir apref/YYYYMMDD 
+		>>> cp aprefYYYYMMDD* discontsYYYYMMDD.snx aprefRename* apref/YYYYMMDD 
 
 	NOW: turn the NADJ machine off.
 
@@ -129,11 +134,12 @@ STEP 1 - Download the archives
 	- e.g. "get_ngca.py -j tas" will download only the Tasmanian NGCA. 
 
 	# On gda2020 machine:
-	>>> get_ngca.py
 	
-	OR
+		>>> get_ngca.py
 	
-	>>> get_ngca.py -j <jurisdiction>
+		OR
+	
+		>>> get_ngca.py -j <jurisdiction>
 	
 + Ask Carl to increase the amount of available ec2s for AUSPOS (usually upto 300 or 600).
 + Currently have to give Carl our tempprary IP adress for the gda2020 machine.
@@ -151,13 +157,14 @@ Run script: 	run_NGCA_PRE_PROCESSING.sh
 + It is also possible to change which jurisdictions are run.
 	
 	# On GDA2020 machine
-	>>> cd /home/fedora/run_scripts/
-	>>> vim run_NGCA_PRE_PROCESSING.sh 
+	
+		>>> cd /home/fedora/run_scripts/
+		>>> vim run_NGCA_PRE_PROCESSING.sh 
 		
 		NOW: edit the NGCA archive date at top of script.
 		
-	>>> [ESC] :wq	
-	>>> nohup ./run_NGCA_PRE_PROCESSING.sh &
+		>>> [ESC] :wq	
+		>>> nohup ./run_NGCA_PRE_PROCESSING.sh &
 
 ------
 STEP 3 - AUSPOS Processing
@@ -172,51 +179,58 @@ STEP 3 - AUSPOS Processing
 --- 3.1: Copy single jurisdiction archive to AUSPOS machine
 
 	# On GDA2020 machine:
-	>>> cd /home/fedora/ngca/[JURIS]
-	>>> scp -i ~/.ssh/ga_ngca -r $archive geodesy@[IP ADDRESS]:/data/craig/ 
+	
+		>>> cd /home/fedora/ngca/[JURIS]
+		>>> scp -i ~/.ssh/ga_ngca -r $archive geodesy@[IP ADDRESS]:/data/craig/ 
 
 	# On AUSPOS/Geodesy machine:
-	>>> cd /data/craig/
+	
+		>>> cd /data/craig/
 	
 	NOW: Confirm GDA2020 mail box is clean before starting each jurisdiction processing.
 
 --- 3.2: Submit RINEX files to AUSPOS	
 
 	# On AUSPOS/Geodesy machine:
-	>> nohup ./GDA2020_submit_multiJobs_SNX.sh $archive &
+	
+		>> nohup ./GDA2020_submit_multiJobs_SNX.sh $archive &
 	
 	NOW: monitor emails to see when processing is complete
 
 --- 3.3: Download SINEX files from AUSPOS
 
 	# On AUSPOS/Geodesy machine:
-	>>> bash down_4_SNX.sh
-	>>> ls SNX | wc -l 
-	>>> mv log_4_submit.txt down_4_SNX.sh nohup.out $archive
-	>>> cd $archive
-	>>> ../get_solutions.py
-	>>> ls solutions/*.SNX | wc -l 
-	>>> ls solutions/*_ls | wc -l
+	
+		>>> bash down_4_SNX.sh
+		>>> ls SNX | wc -l 
+		>>> mv log_4_submit.txt down_4_SNX.sh nohup.out $archive
+		>>> cd $archive
+		>>> ../get_solutions.py
+		>>> ls solutions/*.SNX | wc -l 
+		>>> ls solutions/*_ls | wc -l
 	
 --- 3.4 Transfer AUSPOS solutions from AUSPOS/Geodesy machine to the gda2020 machine	
 	
 	# On GDA2020:
-	>>> cd /home/fedora/run_scripts/
-	>>> vim run_NGCA_DOWNLOAD_FROM_AUSPOS.sh
+	
+		>>> cd /home/fedora/run_scripts/
+		>>> vim run_NGCA_DOWNLOAD_FROM_AUSPOS.sh
 		
 		NOW: - edit the NGCA archive date at top of script.
-			 - edit the jurisdiction at top of script.
+	 	     - edit the jurisdiction at top of script.
 		
-	>>> [ESC] :wq	
-	>>> ./run_NGCA_DOWNLOAD_FROM_AUSPOS.sh
+		>>> [ESC] :wq	
+		>>> ./run_NGCA_DOWNLOAD_FROM_AUSPOS.sh
 
 	# Do some sanity checks
-	>>> ls ../ngca/[$juris]/sinexFiles/ | wc -l
-	>>> ls ../ngca/[$juris]/rinexantls/ | wc -l
+		
+		>>> ls ../ngca/[$juris]/sinexFiles/ | wc -l
+		>>> ls ../ngca/[$juris]/rinexantls/ | wc -l
 	
 	# On AUSPOS/Geodesy machine:
-	>>> cd ..
-	>>> rm -r $archive SNX job tmp [job_check]
+	
+		>>> cd ..
+		>>> rm -r $archive SNX job tmp [job_check]
 
 ------
 STEP 4 - Post-processing
@@ -227,14 +241,15 @@ Run script: 	run_NGCA_POST_PROCESSING.sh
 + Needs DynaML.xsd in /home/fedora/.
 
 	# On GDA2020 machine:
-	>>> cd /home/fedora/RUN-SCRIPTS/
-	>>> vim run_NGCA_POST_PROCESSING.sh 
+	
+		>>> cd /home/fedora/RUN-SCRIPTS/
+		>>> vim run_NGCA_POST_PROCESSING.sh 
 		
 		NOW: 	- edit the NGCA archive date at top of script.
-				- edit the jurisdiction list to account for which jurisdiction(s) you plan to do.
+			- edit the jurisdiction list to account for which jurisdiction(s) you plan to do.
 				
-	>>> [ESC] :wq	
-	>>> nohup ./run_NGCA_POST_PROCESSING.sh &
+		>>> [ESC] :wq	
+		>>> nohup ./run_NGCA_POST_PROCESSING.sh &
 	
 	
 ------
@@ -242,8 +257,9 @@ STEP 5 - Finish NGCA
 ------
 
 	# On GDA2020 machine:
-	>>> cd /home/fedora/ngca/sent/
-	>>> ls -lotr
+	
+		>>> cd /home/fedora/ngca/sent/
+		>>> ls -lotr
 	
 		NOTE: 
 			* the archive(s) will be the last file(s) listed.
@@ -266,6 +282,7 @@ JADJ QAQC - !NEED TO UPDATE THIS! | !IN DEVELOPMENT!
 	
 
 	+ The downloaded files are in ~/ftp.ga.gov.au/adjustmentData/ 
+		
 		>>> Move the old files to the staging area. 
 			- From ~/stn/ to ~/stn/staging/ and from ~/msr/ to ~/msr/staging/
 		>>> Move the adj.xml file from the download directory to ~/stn/
@@ -309,7 +326,7 @@ JADJ QAQC - !NEED TO UPDATE THIS! | !IN DEVELOPMENT!
 	+ Ignore the rest of the commands in this section. 
 	+ You are done. 
 
-	    >>> DON'T DO THIS (until iteration time is fixed): [>>> nohup runNatAdjust.pl -qa &]
+	    	>>> DON'T DO THIS (until iteration time is fixed): [>>> nohup runNatAdjust.pl -qa &]
 
 	+ Check the shifts in the first iteration in the *adj.xml file. If there is movement of more than a few metres, I’d contact the jurisdiction. Some new stations can move a bit, so it’s best to check with the data owner 
 
@@ -335,14 +352,16 @@ ELSEIF: APREF file has been renewed this month,
 			
 			>>> nohup runNatAdjust.pl &
 		
-		# Once finished, run the following commands for post-processing and packaging of NADJ:
+			NOTE: When finished, run the following commands for post-processing and packaging of NADJ:
 			
-			# Organise, and add Type-B uncertainties:
+		# Organise, and add Type-B uncertainties:
+			
 			>>> mv nohup.out adjustments/gda2020_YYYYMMDD 
 			>>> cd adjustments/gda2020_YYYYMMDD
 			>>> addTypeB.py
 			
-			# Organise:
+		# Organise:
+
 			>>> cd ..
 			>>> cp -r gda2020_YYYYMMDD sent/ 
 			>>> zip -r gda2020_YYYYMMDD.zip gda2020_YYYYMMDD/
@@ -350,18 +369,21 @@ ELSEIF: APREF file has been renewed this month,
 			>>> cd sent/gda2020_YYYYMMDD/
 			>>> cp ../gda2020_[PREVIOUS]/gda2020_[PREVIOUS].phased-stage.xyz ./
 			
-			# Calculate difference between adjustments:
-				+ Order of solutions doesn't matter.
+		# Calculate difference between adjustments:
+		- Order of solutions doesn't matter.
+			
 			>>> dynaDiff.py gda2020_YYYYMMDD.phased-stage.xyz gda2020_YYYYMMDD.phased-stage.xyz
 			
-			# Organsise:
+		# Organsise:
+
 			>>> rm *.sh *.asl *.aml *.d *.dbid *.dnaproj *.map *.data *.rft *.seg
 			>>> mkdir inputFiles
 			>>> cp ~/AUSGeoid2020_20180201.gsb ~/DynaML.xsd ~/apref20220326* ~/disconts20220326.snx ~/stn/*.xml ~/msr/*.xml inputFiles/ 
 			>>> cd ..
 			>>> zip -r gda2020_YYYYMMDD.zip gda2020_YYYYMMDD/
 			
-			# Upload to FTP, and email AWG:
+		# Upload to FTP, and email AWG:
+
 			>>> ftp ftp.ga.gov.au
 			>>> cd adjustments/
 			>>> del gda2020_YYYYMMDD.zip 	(delete the oldest adjustment)
