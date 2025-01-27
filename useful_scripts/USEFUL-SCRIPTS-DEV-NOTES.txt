@@ -52,23 +52,27 @@ FOLDER  - /useful_scripts/QAQC
 	-----
 
 	# Download Julia:
+
 		>>> wget https://julialang-s3.julialang.org/bin/linux/x64/1.11/julia-1.11.3-linux-x86_64.tar.gz
 		>>> tar -xvzf julia-1.11.3-linux-x86_64.tar.gz
 		>>> rm julia-1.11.3-linux-x86_64.tar.gz
 		
-		Note: May need to update the version/Hyperlink to work with latest stable release (https://julialang.org/downloads/)
+		NOTE: May need to update the version/Hyperlink to work with latest stable release (https://julialang.org/downloads/)
 			  
 	# Setup path:
+
 		>>> vim ~/.bashrc
 		Add this line to file: export PATH="$PATH:/home/ec2-user/SOFTWARE/Julia/julia-1.11.3/bin"
 		>>> :wq
 		>>> source ~/.bashrc
 	
 	# Confirm installation:
+
 		>>> julia
 		>>> exit()
 	
 	# Setup Julia project environment (for packages):
+
 		>>> julia
 		>>> ]
 		>>> activate juliaENV
@@ -81,25 +85,28 @@ FOLDER  - /useful_scripts/QAQC
 	-------------
 
 	# Start/close:
+
 		>>> julia	
 		>>> exit()
 		
 	# Open/close package manager mode:
+
 		>>> ]
 		>>> "Backspace"
 		
 	# To access "Help Mode" (info on functions):
+
 		>>> ?
 		>>> function
 
 	# Create Julia project environment and install a package:
 
-	Open Julia:						>>> julia
+	Open Julia:				>>> julia
 	Enter package manager mode:		>>> ]
 	Create/activate project:		>>> activate juliaENV
-	Add a package:					>>> add LinearAlgebra
+	Add a package:				>>> add LinearAlgebra
 	Close package manager mode:		>>> "Backspace"
-	Close Julia 					>>> exit()
+	Close Julia 				>>> exit()
 	
 	- Now if this project is activated in the future, it will have the package installed.
 
