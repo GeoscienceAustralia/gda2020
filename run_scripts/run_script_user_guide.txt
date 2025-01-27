@@ -34,9 +34,10 @@ STEP 1 - Download APREF cumulative solution files
 + Identify if that solution is > 3 months old. 
 
 	# On GDA2020 machine:
-	>>> cd ~/apref/workDir/
-	>>> aws s3 ls s3://gnss-analysis/results/combination/combinations_IGS20/
-	>>> aws s3 sync s3://gnss-analysis/results/combination/combinations_IGS20/YYYYMMDD/ ./ 
+	
+		>>> cd ~/apref/workDir/
+		>>> aws s3 ls s3://gnss-analysis/results/combination/combinations_IGS20/
+		>>> aws s3 sync s3://gnss-analysis/results/combination/combinations_IGS20/YYYYMMDD/ ./ 
 
 ------	
 STEP 2 - Post-process the APREF cumulative solution
@@ -48,13 +49,14 @@ STEP 2 - Post-process the APREF cumulative solution
 	2. RVS_GDA2020.txt.
 	
 	# On GDA2020 machine:
-	>>> cd /home/fedora/run_scripts/
-	>>> vim run_APREF_STEP_2.sh 
-		
-	NOW: edit the APREF solution date at top of script.
 	
-	>>> [ESC] :wq	
-	>>> nohup ./run_APREF_STEP_2.sh &
+		>>> cd /home/fedora/run_scripts/
+		>>> vim run_APREF_STEP_2.sh 
+		
+		NOW: edit the APREF solution date at top of script.
+	
+		>>> [ESC] :wq	
+		>>> nohup ./run_APREF_STEP_2.sh &
 
 ------	
 STEP 3 - Upload post-processed APREF
