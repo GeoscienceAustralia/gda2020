@@ -282,7 +282,15 @@ JADJ QAQC - Windows Version (a temporary solution)
 + The JADJ QA/QC refers to these steps:
 	1. Duplicate station check.
 	2. Near station check.
-	3. 
+	3. 1-iteration adjustment
++ Jurisdictional adjustment data are only excluded from the national adjustment if they 
+  cause the 1-iteration to fail dramatically. It is hard to define what failure is here. 
+  For example, sometimes large station shifts occur, but they are ligitamite because they 
+  are caused by improved data included by the jurisdiction. It is best to check with the 
+  jurisdiction if unsure. Another definition of failure could be to check the sigma-0 value. 
+  If it is > 100 than something could be wrong. 100 is an uninformed guess for a cutoff 
+  sigma-0 value, I have not done tests to identify what threshold for a single-iteration 
+  sigma-0 value would make sense. 
 
 
 	# On NADJ Windows machine:
@@ -344,6 +352,9 @@ JADJ QAQC - Windows Version (a temporary solution)
 		>>> python runNatAdjust.py -qa
 
 		NOTE: - ...
+
+
+
 ------------------------------------------------------------------------------------------------------------------------------------
 + Do this between NGCA and NADJ, if jurisdictions upload new files. 
 
