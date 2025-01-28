@@ -272,8 +272,38 @@ STEP 5 - Finish NGCA
 	
 
 =========
-JADJ QAQC - !NEED TO UPDATE THIS! | !IN DEVELOPMENT!
+JADJ QAQC - Windows Version (a temporary solution)
 =========
++ This section covers the checks done on the JADJ. 
++ It is to be done for only those jurisdictions that submit a JADJ. 
++ It occurs between NGCA and the NADJ. 
++ It is for the Windows machine (NADJ Windows), a temporary solution whilst it 
+  is investigated how to run the national adjustment on Linux again. 
+
+	# On NADJ Windows machine:
+
+	+ Download the jurisdictional adjustment data:
+
+		>>> cd \Data
+		>>> aws s3 cp s3://gda2020-ngca/adjustmentData/ stn/ --recursive --exclude "*" --include "[JUR]*.adj.xml"
+		>>> aws s3 cp s3://gda2020-ngca/adjustmentData/ msr/ --recursive --exclude "*" --include "[JUR]*_msr.xml"
+
+	+ Move the old files to the staging area:
+
+		>>> cd stn
+		>>> dir
+		>>> move [JUR]_GDA2020_YYYYMMDD.adj.xml staging 
+
+		>>> cd ..\msr
+		>>> dir
+		>>> move [JUR]_GDA2020_YYYYMMDD_msr.xml staging
+		>>> cd ..
+
+	+ Check if there are any new auxiliary files:
+
+		>>> aws s3 ls s3://gda2020-ngca/files/
+
+------------------------------------------------------------------------------------------------------------------------------------
 + Do this between NGCA and NADJ, if jurisdictions upload new files. 
 
 	# On NADJ machine:
@@ -295,7 +325,7 @@ JADJ QAQC - !NEED TO UPDATE THIS! | !IN DEVELOPMENT!
 	+ There are three QAQC checks: 
 		1. a duplicate station search (different stations with the same name), 
 		2. a near station search (same station but two different names), 
-		3. and a 1-iteration adjustment (to check the data fits reasonably well) -  
+		3. and a 1-iteration adjustment (to check the data fits reasonably well)
 
 		>>> fixDisconts.py 
 		>>> runNatAdjust.pl -s dup 
