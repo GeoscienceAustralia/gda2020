@@ -274,6 +274,7 @@ STEP 5 - Finish NGCA
 =========
 JADJ QAQC - Windows Version (a temporary solution)
 =========
+
 + This section covers the checks done on the JADJ. 
 + It is to be done for only those jurisdictions that submit a JADJ. 
 + It occurs between NGCA and the NADJ. 
@@ -354,71 +355,6 @@ JADJ QAQC - Windows Version (a temporary solution)
 		NOTE: - ...
 
 
-
-------------------------------------------------------------------------------------------------------------------------------------
-+ Do this between NGCA and NADJ, if jurisdictions upload new files. 
-
-	# On NADJ machine:
-		
-		>>> updateFiles.py
-		>>> wget -r --user='gda2020' --password='!2peqz4' ftp://ftp.ga.gov.au//adjustmentData/<jur>* 
-			- Where: <jur> = ACT, NSW, VIC, TAS, SA, WA, NT, or QLD
-	
-
-	+ The downloaded files are in ~/ftp.ga.gov.au/adjustmentData/ 
-		
-		>>> Move the old files to the staging area. 
-			- From ~/stn/ to ~/stn/staging/ and from ~/msr/ to ~/msr/staging/
-		>>> Move the adj.xml file from the download directory to ~/stn/
-		>>> Move the msr.xml file to ~/msr/ 
-
-		>>> rm -r ftp.ga.gov.au 
-
-	+ There are three QAQC checks: 
-		1. a duplicate station search (different stations with the same name), 
-		2. a near station search (same station but two different names), 
-		3. and a 1-iteration adjustment (to check the data fits reasonably well)
-
-		>>> fixDisconts.py 
-		>>> runNatAdjust.pl -s dup 
-		>>> checkDST.pl 
-		>>> rm gda2020_YYYYMMDD.dup*
-
-	+ If there are duplicates, contact the relevant jurisdictions and ask them to fix 
-	+ Searching the measurement files will help to identify what jurisdictions to contact, 
-		- e.g., go to ~/msr/ and do ‘grep [station name] *.xml’  
- 
-		>>> runNatAdjust.pl -s near 
-		>>> rm gda2020_YYYYMMDD.near* 
-		>>> cd nearStns/ 
-		>>> ./filterNearStns.pl 
-			+ Ignore the output from this script, it’s not necessary and I should get rid of it  
-
-		>>> vim gda2020_YYYYMMDD.near.dst 
-
-	+ If there are near stations listed in this file, contact the relevant jurisdictions, and ask them to fix 
-	+ Searching the measurement files will help to identify what jurisdictions to contact, e.g., go to ~/msr/ and do ‘grep [station name] *.xml’ 
-
-		>>> rm gda2020* notUsedIgnore.dat 
-		>>> cd ~/
-	
-	STOP HERE. 	
-	-----------------------
-	+ I would also do a 1-iteration adjustment to check that things fit well. 
-	+ I am not doing this currently because an iteration has gone from 6 hours to 27. 
-	+ I need to fix this before we do this again. 
-	+ Ignore the rest of the commands in this section. 
-	+ You are done. 
-
-	    	>>> DON'T DO THIS (until iteration time is fixed): [>>> nohup runNatAdjust.pl -qa &]
-
-	+ Check the shifts in the first iteration in the *adj.xml file. If there is movement of more than a few metres, I’d contact the jurisdiction. Some new stations can move a bit, so it’s best to check with the data owner 
-
-		>>> DON'T DO THIS (until iteration time is fixed): [>>> rm gda2020_YYYYMMDD*] 
-
-	+ If the JADJ fails the one iteration adjustment (rare), then the files in staging should be moved back to the stn/ and msr/ directories and the new files deleted. If it passes, delete the files in staging 
-	+ I don’t reject JADJ because of duplicates or near stations, I just ask them to fix them	
-	-----------------------
 
 ============
 RUN THE NADJ - !NEED TO UPDATE THIS! | !IN DEVELOPMENT!
