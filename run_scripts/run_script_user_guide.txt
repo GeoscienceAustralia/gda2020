@@ -288,8 +288,8 @@ JADJ QAQC - Windows Version (a temporary solution)
   For example, sometimes large station shifts occur, but they are ligitamite because they 
   are caused by improved data included by the jurisdiction. It is best to check with the 
   jurisdiction if unsure. Another definition of failure could be to check the sigma-0 value. 
-  If it is > 100 than something could be wrong. 100 is an uninformed guess for a cutoff 
-  sigma-0 value, I have not done tests to identify what threshold for a single-iteration 
+  If it is > 50 than something could be wrong. Fifty is an uninformed guess for a quality 
+  sigma-0 threshold. I have not done tests to identify what threshold for a single-iteration 
   sigma-0 value would make sense. 
 
 
