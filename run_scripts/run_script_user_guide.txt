@@ -278,7 +278,12 @@ JADJ QAQC - Windows Version (a temporary solution)
 + It is to be done for only those jurisdictions that submit a JADJ. 
 + It occurs between NGCA and the NADJ. 
 + It is for the Windows machine (NADJ Windows), a temporary solution whilst it 
-  is investigated how to run the national adjustment on Linux again. 
+  is investigated how to run the national adjustment on Linux again.
++ The JADJ QA/QC refers to these steps:
+	1. Duplicate station check.
+	2. Near station check.
+	3. 
+
 
 	# On NADJ Windows machine:
 
@@ -299,10 +304,46 @@ JADJ QAQC - Windows Version (a temporary solution)
 		>>> move [JUR]_GDA2020_YYYYMMDD_msr.xml staging
 		>>> cd ..
 
-	+ Check if there are any new auxiliary files:
+	+ Download auxiliary files:
 
-		>>> aws s3 ls s3://gda2020-ngca/files/
+		>>> aws s3 cp s3://gda2020-ngca/files/ renaming/ --recursive --exclude "*" --include "[jur]*.renaming"
+		>>> aws s3 cp s3://gda2020-ngca/files/ renaming/ --recursive --exclude "*" --include "[jur]*.ignore"
+		>>> aws s3 cp s3://gda2020-ngca/files/ nearStns/ --recursive --exclude "*" --include "[jur]*.near"
+	
+		NOTE: Move the old versions of these files into the staging folder of each respective directory (renaming, nearStns)
+                      if they exist. 
+	
+	+ Run the duplicate station search:
 
+		>>> python runNatAdjust.py -s dup
+		>>> perl checkDST.pl
+
+		NOTE: - Check the .dup file for identified duplicates, i.e. 'type gda2020_YYYYMMDD.dup.dup'.
+		      - Notify jurisdictions involved to fix/clarify respective duplicates.
+		      	* I have not been enforcing this lately due to development in this process.
+
+		>>> del gda2020_YYYYMMDD.dup*
+
+	+ Run the near station search:
+
+		>>> python runNatAdjust.py -s near
+		>>> move gda2020_YYYYMMDD.near.dst nearStns
+		>>> del gda2020_YYYYMMDD.near.bat
+		>>> cd nearStns
+		>>> perl filterNearStns.pl 
+
+		NOTE: - Check the .dst file for identified near stations, i.e. 'type gda2020_YYYYMMDD.near.dst'.
+		      - Notify jurisdictions involved to fix/clarify respective near stations.
+			* I have not been enforcing this lately due to development in this process.
+
+		>>> del gda2020* notUsedIgnore.dat
+		>>> cd ..\
+
+	+ Run the 1-iteration adjustment (~9hrs):
+
+		>>> python runNatAdjust.py -qa
+
+		NOTE: - ...
 ------------------------------------------------------------------------------------------------------------------------------------
 + Do this between NGCA and NADJ, if jurisdictions upload new files. 
 
