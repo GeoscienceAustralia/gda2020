@@ -381,7 +381,12 @@ Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solv
 
 		>>> python runNatAdjust.py -qa
 
-		NOTE: - ...
+		NOTE: - Investigate the sigma-0 and maximum correction value to identify potential issues. 
+		      - Large corrections or sigma-0 values do not necessarily mean the JADJ needs to be rejected. 
+		      - e.g. some jurisdictions are improving old height measurements, leading to ~5 metre corrections
+                        in the vertical. These are improvements, but best to confirm with the jurisdictions. 
+
+		>>> move gda2020.....
 
 
 
