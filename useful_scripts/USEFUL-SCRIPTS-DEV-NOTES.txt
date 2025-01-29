@@ -2,11 +2,9 @@
 USEFUL SCRIPTS - Notes
 ==============
 
-------
-FOLDER - /useful_scripts/NGCA
-------
+--- FOLDER - /useful_scripts/NGCA
 
---- Summary
+	# Summary
 
 	* These scripts were developed to handle a rare NGCA/AUSPOS issue.
 	* The issue is when jobs are submitted, but AWS/AUSPOS does not
@@ -18,11 +16,9 @@ FOLDER - /useful_scripts/NGCA
 	* They are bash scripts and aimed to be run from the geodesy[IP ADDRESS]
 	  ec2. 
 
-------
-FOLDER  - /useful_scripts/QAQC
-------
+--- FOLDER  - /useful_scripts/QAQC
 
---- Summary
+	# Summary
 
 	* These scripts were developed for QA/QC of GDA2020 update process.
 	* They rely on functions from the 'functions' folder.
@@ -33,8 +29,8 @@ FOLDER  - /useful_scripts/QAQC
 	* They were written in the Julia programming laguage. It was planned to translate 
 	  these to Python and add them to official repository when time allowed. For now
 	  though, they are located here as useful scripts so they aren't mixed with the 
-      operational scripts. 	  
-	* There was some work into a JADJ QA/QC script, but it is in development and
+          operational scripts. 	  
+	* There was some work into a JADJ QA/QC script, but it is in early development and
 	  not worth placing here. 
 	* There is a Julia programming language setup guide below.
 	* These scripts are designed to be run on a seperate machine than the operation
@@ -42,7 +38,7 @@ FOLDER  - /useful_scripts/QAQC
 	  (e.g. s3://gda2020-ngca/ngcaResults/ for the NGCA script). 
 
 
---- Julia programmiing language 
+--- JULIA PROGRAMMING LANGUAGE - Setup Guide
 	
 	* Assumes user is working on Linux machine.
 	* Instructions are Bash terminal commands.
@@ -71,7 +67,7 @@ FOLDER  - /useful_scripts/QAQC
 		>>> julia
 		>>> exit()
 	
-	# Setup Julia project environment (for packages):
+	# Setup Julia project environment (for package management):
 
 		>>> julia
 		>>> ]
