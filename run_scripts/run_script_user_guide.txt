@@ -2,14 +2,16 @@
 GDA2020 ROUTINE PROCESSING
 ==========================
 
-+ This document displays the commands executed in each component of the routine processing. So that it 
-  can be used as a reference when a user is processing. 
-+ Bash/CLI commands are identified by the '>>>' marker where they can be copy and pasted into the terminal. 
++ This document displays the commands executed in each component of the GDA2020 routine processing. 
+  It is designed to be used by a user when conducting any part of the processing. Bash/CLI commands 
+  are identified by the '>>>' marker where they can be copy and pasted into the terminal.
+
 + The routine processing is made up of 4 seperate procedures:
 	1. UPDATE THE APREF CUMULATIVE SOLUTION.
 	2. NGCA PROCESSING.
 	3. JADJ QA/QC
 	4. NADJ PROCESSING
+
 + Glossery of terms:
 	APREF - Australia-Pacific Reginal Reference Frame (in this context is is the cumulative solution).
 	NGCA  - National GNSS Campaign Archive. 
@@ -354,7 +356,7 @@ Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solv
 		>>> python runNatAdjust.py -s dup
 		>>> perl checkDST.pl
 
-		NOTE: - Check the .dup file for identified duplicates, i.e. 'type gda2020_YYYYMMDD.dup.dup'.
+		NOTE: - Check the .dup file for identified duplicates, i.e. '>>> type gda2020_YYYYMMDD.dup.dup'.
 		      - Notify jurisdictions involved to fix/clarify respective duplicates.
 		      	* I have not been enforcing this lately due to development in this process.
 
@@ -368,7 +370,7 @@ Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solv
 		>>> cd nearStns
 		>>> perl filterNearStns.pl 
 
-		NOTE: - Check the .dst file for identified near stations, i.e. 'type gda2020_YYYYMMDD.near.dst'.
+		NOTE: - Check the .dst file for identified near stations, i.e. '>>> type gda2020_YYYYMMDD.near.dst'.
 		      - Notify jurisdictions involved to fix/clarify respective near stations.
 			* I have not been enforcing this lately due to development in this process.
 
