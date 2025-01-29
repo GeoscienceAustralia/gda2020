@@ -291,10 +291,12 @@ JADJ QAQC - Windows Version (a temporary solution)
   jurisdiction if unsure. Another definition of failure could be to check the sigma-0 value. 
   If it is > 50 than something could be wrong. Fifty is an uninformed guess for a quality 
   sigma-0 threshold. I have not done tests to identify what threshold for a single-iteration 
-  sigma-0 value would make sense. 
+  sigma-0 value would make sense.
++ Steps in AWS console to connect to Windows machine: 
 
+	> Systems Manager > Fleet Manager > Node Actions > Connect > Connect with Remote Desktop > Key pair
 
-	# On NADJ Windows machine:
+	# On NADJ Windows machine: 
 
 	+ Download the jurisdictional adjustment data:
 
