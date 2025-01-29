@@ -1,3 +1,21 @@
+==========================
+GDA2020 ROUTINE PROCESSING
+==========================
+
++ This document summarises the command executed in each component of the routine processing. 
++ The routine processing is made up of 4 seperate procedures:
+	1. UPDATE THE APREF CUMULATIVE SOLUTION.
+	2. NGCA PROCESSING.
+	3. JADJ QA/QC
+	4. NADJ PROCESSING
++ Glossery of terms:
+	APREF - Australia-Pacific Reginal Reference Frame (in this context is is the cumulative solution).
+	NGCA  - National GNSS Campaign Archive. 
+	JADJ  - Jurisdictional Adjustment. 
+	NADJ  - National Adjustment. 
+	JDA   - Jurisdictional Data Archive. 
+
+
 ====================================
 UPDATE THE APREF CUMULATIVE SOLUTION
 ====================================
@@ -363,9 +381,9 @@ Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solv
 
 
 
-============
-RUN THE NADJ - !NEED TO UPDATE THIS! | !IN DEVELOPMENT!
-============
+===============
+NADJ PROCESSING - !NEED TO UPDATE THIS! | !IN DEVELOPMENT!
+===============
 
 Schedule: 	Run NADJ on 1st of every 2nd month.
 Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solved). 
