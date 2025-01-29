@@ -83,7 +83,7 @@ STEP 3 - Upload post-processed APREF
 	
 
 ------	
-STEP 4 - Copy post-processed APREF 30 NADJ machine
+STEP 4 - Copy post-processed APREF TO NADJ machine
 ------
 
 	# On NADJ machine: Delete the old apref version
@@ -106,17 +106,16 @@ STEP 4 - Copy post-processed APREF 30 NADJ machine
 	# On NADJ machine: Download the new apref version
 		
 		>>> aws s3 cp s3://gda2020-ngca/adjustmentData/ --recursive --exclude "*" --include "apref*"
-		>>> aws s3 cp s3://gda2020-ngca/adjustmentData/ --recursive --exclude "*" --include "disconts*"
-		>>> rm aprefYYYYMMDD.rvs		
+		>>> aws s3 cp s3://gda2020-ngca/adjustmentData/ --recursive --exclude "*" --include "disconts*"		
 	
 	# On NADJ machine:
 	
-		>>> dnaimport -n aprefRename_ aprefYYYYMMDD.snx --discontinuity-file   discontsYYYYMMDD.snx --export-xml
+		>>> dnaimport -n aprefRename_ aprefYYYYMMDD.snx --discontinuity-file discontsYYYYMMDD.snx --export-xml
 		>>> rm aprefRename_.*
 		>>> mkdir apref/YYYYMMDD 
 		>>> cp aprefYYYYMMDD* discontsYYYYMMDD.snx aprefRename* apref/YYYYMMDD 
 
-	NOW: turn the NADJ machine off.
+		NOW: turn the NADJ machine off.
 
 
 ===============
@@ -362,12 +361,6 @@ JADJ QAQC - Windows Version (a temporary solution)
 RUN THE NADJ - !NEED TO UPDATE THIS! | !IN DEVELOPMENT!
 ============
 
-IF: APREF file is not being renewed this month,
-
-	+ See APPENDIX (1) and impliment that before running code under "ELSEIF".	
-			
-ELSEIF: APREF file has been renewed this month,
-
 	+ Run as normal
 	
 		# Run the national adjustment (and wait for it to finish):
@@ -417,31 +410,4 @@ ELSEIF: APREF file has been renewed this month,
 					
 			---- DONE ----
 
-
-
-
------ APPPENDIX (1) -----
-	
-		# On NADJ machine:
-		
-			Delete these two files:
-			- aprefRename_msr.xml 
-			- aprefRename_stn.xml 
-		
-			These 6 apref files should remain:
-				- aprefYYYYMMDD.disconts
-				- aprefYYYYMMDD_msr.xml 
-				- aprefYYYYMMDD.rvs 
-				- aprefYYYYMMDD.snx 
-				- aprefYYYYMMDD_stn.xml
-				- discontsYYYYMMDD.snx
-			
-			Run these commands:
-			>>> dnaimport -n aprefRename_ aprefYYYYMMDD.snx --discontinuity-file   discontsYYYYMMDD.snx --export-xml
-			>>> rm aprefRename_.*
-			>>> mv apref/YYYYMMDD apref/YYYYMMDD_[MONTH]
-				- the old YYYYMMDD_[MONTH] apref folders can be deleted once the adjustment runs okay with the new file. 
-			>>> mkdir apref/YYYYMMDD 
-			>>> cp aprefYYYYMMDD* discontsYYYYMMDD.snx aprefRename* apref/YYYYMMDD
-			
-		# Now return back up to the "ELSEIF" part of the "RUN THE NADJ" section above. 
+. 
