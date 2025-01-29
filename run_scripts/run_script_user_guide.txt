@@ -2,6 +2,9 @@
 UPDATE THE APREF CUMULATIVE SOLUTION
 ====================================
 
+Schedule:	Run APREF cumulative solution post-processing whenever a new solution is available that is at >= 3 months old. 
+Machine:        gda2020 (National Geodesy).
+
 + The aim here is to post-process the APREF cumulative solution
   to generate GDA2020 constraints for the national adjustment, and
   NGCA processing. 
@@ -274,6 +277,9 @@ STEP 5 - Finish NGCA
 JADJ QAQC - Windows Version (a temporary solution)
 =========
 
+Schedule: 	Run JADJ QA/QC when/if a jurisdiction supplies it between NGCA and next NADJ.
+Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solved). 
+
 + This section covers the checks done on the JADJ. 
 + It is to be done for only those jurisdictions that submit a JADJ. 
 + It occurs between NGCA and the NADJ. 
@@ -360,6 +366,9 @@ JADJ QAQC - Windows Version (a temporary solution)
 ============
 RUN THE NADJ - !NEED TO UPDATE THIS! | !IN DEVELOPMENT!
 ============
+
+Schedule: 	Run NADJ on 1st of every 2nd month.
+Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solved). 
 
 	+ Run as normal
 	
