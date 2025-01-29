@@ -2,7 +2,9 @@
 GDA2020 ROUTINE PROCESSING
 ==========================
 
-+ This document summarises the command executed in each component of the routine processing. 
++ This document displays the commands executed in each component of the routine processing. So that it 
+  can be used as a reference when a user is processing. 
++ Bash/CLI commands are identified by the '>>>' marker where they can be copy and pasted into the terminal. 
 + The routine processing is made up of 4 seperate procedures:
 	1. UPDATE THE APREF CUMULATIVE SOLUTION.
 	2. NGCA PROCESSING.
