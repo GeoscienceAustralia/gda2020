@@ -62,7 +62,8 @@ STEP 1 - Download APREF cumulative solution files
 	
 		>>> cd ~/apref/workDir/
 		>>> aws s3 ls s3://gnss-analysis/results/combination/combinations_IGS20/
-		>>> aws s3 sync s3://gnss-analysis/results/combination/combinations_IGS20/YYYYMMDD/ ./ 
+		>>> aws s3 cp s3://gnss-analysis/results/combination/combinations_IGS20/YYYYMMDD/AUS0OPSSNX_YYYYDOY_YYYYDOY_00U_SOL.SNX.gz ./
+		>>> aws s3 cp s3://gnss-analysis/results/combination/combinations_IGS20/YYYYMMDD/AUS0OPSSNX_YYYYDOY_YYYYDOY_00U_DSC.SNX ./
 
 ------	
 STEP 2 - Post-process the APREF cumulative solution
