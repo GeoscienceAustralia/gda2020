@@ -2,18 +2,18 @@
 GDA2020 ROUTINE PROCESSING
 ==========================
 
-+ This document displays the commands executed in each component of the GDA2020 routine processing. 
-  It is designed to be used by a user when conducting any part of the processing. Bash/CLI commands 
++ This document displays the commands executed in each component of the GDA2020 routine processing. It 
+  is designed to be followed by a user when conducting any part of the processing. Bash/CLI commands 
   are identified by the '>>>' marker where they can be copy and pasted into the terminal.
 
 + The routine processing is made up of 4 seperate procedures:
 	1. UPDATE THE APREF CUMULATIVE SOLUTION.
 	2. NGCA PROCESSING.
-	3. JADJ QA/QC
-	4. NADJ PROCESSING
+	3. JADJ QA/QC.
+	4. NADJ PROCESSING.
 
 + Glossery of terms:
-	APREF - Australia-Pacific Reginal Reference Frame (in this context is is the cumulative solution).
+	APREF - Australia-Pacific Reginal Reference Frame (in this context it is reference to the cumulative solution).
 	NGCA  - National GNSS Campaign Archive. 
 	JADJ  - Jurisdictional Adjustment. 
 	NADJ  - National Adjustment. 
