@@ -43,8 +43,8 @@ for item in ['log_4_submit.txt', 'selectRef.log', 'verifySub.log']:
 os.chdir('../')
 os.mkdir('other')
 os.chdir('other')
-os.system('cp /home/fedora/ngca/' + jur + '/' + date + '/nameChanges.dat ./' )
-os.system('cp /home/fedora/transTables/' + jur + 'TransTable*.csv ./' )
+os.system('cp ~/ngca/' + jur + '/' + date + '/nameChanges.dat ./' )
+os.system('cp ~/transTables/' + jur + 'TransTable*.csv ./' )
 os.chdir('../')
 sys_cmd = 'cp -r ../../' + jur + '/sinexFiles ./snx'
 os.system(sys_cmd)
