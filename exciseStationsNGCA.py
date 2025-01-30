@@ -18,7 +18,7 @@ import geodepy.gnss
 
 
 # Copy over gda2020.dat
-os.system('cp /home/fedora/apref/workDir/gda2020.dat ../sinexFiles')
+os.system('cp ~/apref/workDir/gda2020.dat ../sinexFiles')
 
 # Create a list of APREF stations to exclude
 exclude = ['MAC1', 'CEDU', 'CA19', 'HOBA'];

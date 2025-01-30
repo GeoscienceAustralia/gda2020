@@ -13,6 +13,7 @@ import shutil
 import glob
 from ftplib import FTP
 from datetime import datetime
+from pathlib import Path
 
 
 # Create an ArgumentParser object
@@ -35,7 +36,7 @@ p1 = re.compile('\w{8}\.\d{2}o$', re.I)
 
 # Move to the NGCA directory
 print('* Moving to the NGCA directory')
-os.chdir('/home/fedora/ngca/')
+os.chdir(f'{Path.home()}/ngca/')
 
 # Get today's date in the format YYYYMMDD
 today = str(datetime.today())

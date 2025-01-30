@@ -22,7 +22,7 @@ import re
 import os
 import datetime
 import statistics
-
+from pathlib import Path
 
 # Set up logging
 logging.basicConfig(
@@ -32,7 +32,7 @@ logging.basicConfig(
 
 # Read the supported antennas into a set
 antTypes = set()
-with open('/home/fedora/antTypes.dat', 'r') as f:
+with open(f'{Path.home()}/antTypes.dat', 'r') as f:
     for line in f:
         cols = line.split()
         antTypes.add(cols[0])

@@ -18,7 +18,7 @@ for JURIS in ${JURIS_LIST[*]}; do
 
     # Navigate to jurisdiction directory
     printf "\nNavigating to ${JURIS^^} archive directory...\n"
-    cd /home/fedora/ngca/$JURIS/$ARCHIVE
+    cd ~/ngca/$JURIS/$ARCHIVE
 
     # Make backup of files in case there are any issues
     printf "\nCopying files to backup directory in case there are issues later...\n"

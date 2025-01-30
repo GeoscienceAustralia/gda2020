@@ -8,7 +8,7 @@ printf "\nAPREF solution selected: $YYYYMMDD...\n"
 
 # Navigate to APREF working directory
 printf "\nNavigating to working directory...\n"
-cd /home/fedora/apref/workDir/
+cd ~/apref/workDir/
 
 # Create symbolic link
 ln -s AUS0OPSSNX_*_00U_DSC.SNX soln.snx

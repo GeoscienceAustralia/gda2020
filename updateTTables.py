@@ -6,13 +6,13 @@ S3 bucket
 
 import  os
 import glob
-
+from pathlib import Path
 
 # Define the jurisdictions
 jurisdictions = ['nsw', 'act', 'vic', 'tas', 'sa', 'wa', 'nt', 'qld']
 
 # Move to the translation tables directory and delete the contents 
-os.chdir('/home/fedora/transTables')
+os.chdir(f'{Path.home()}/transTables')
 for f in os.listdir('.'):
     os.remove(f)
 

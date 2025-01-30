@@ -9,7 +9,7 @@ from geodepy.convert import dec2hp, hp2dec
 from numpy import matrix
 from geodepy.statistics import vcv_cart2local, error_ellipse, circ_hz_pu
 from math import sqrt
-
+from pathlib import Path
 
 # Determine the files to use 
 apuFiles = glob('*.apu')
@@ -39,7 +39,7 @@ nonRvsU = 0.012
 
 # Read in the RVS stations
 rvsStations = []
-for line in open('/home/fedora/rvs_stations.dat'):
+for line in open(f'{Path.home()}/rvs_stations.dat'):
     rvsStations.append(line.rstrip())
 
 # Open output file

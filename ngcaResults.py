@@ -4,6 +4,7 @@ import sys
 import os
 import shutil
 import glob
+from pathlib import Path
 
 d = os.getcwd()
 jur = d.split('/')[-2]
@@ -13,7 +14,7 @@ dirs.sort()
 date = dirs[-1]
 os.chdir(d)
 campaign = jur.upper() + '_NGCA_' + date
-os.chdir('/home/fedora/ngca/sent')
+os.chdir(f'{Path.home()}/ngca/sent')
 try:
     os.mkdir(campaign)
 except OSError:
@@ -22,7 +23,7 @@ except OSError:
 os.chdir(campaign)
 os.mkdir('dynaML')
 os.chdir('dynaML')
-os.system('cp /home/fedora/ngca/' + jur + '/baselines/*.xml .')
+os.system('cp ~/ngca/' + jur + '/baselines/*.xml .')
 os.system('rm -f *GDA2020*')
 os.system('mv *NGCA* ../')
 os.chdir('../')

@@ -7,6 +7,7 @@ import sys
 import os
 import glob
 import re
+from pathlib import Path
 
 p1 = re.compile('\d{8}$')
 d = os.getcwd()
@@ -19,7 +20,7 @@ for dir in dirs:
     if p1.match(dir):
         ngcaVer = dir
 os.chdir(d)
-aprefPath = glob.glob('/home/fedora/apref/apref*.snx')
+aprefPath = glob.glob(f'{Path.home()}/apref/apref*.snx')
 aprefFile = aprefPath[-1].split('/')[-1]
 discontsFile = aprefFile.replace('apref', 'disconts')
 

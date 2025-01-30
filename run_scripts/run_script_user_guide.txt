@@ -76,7 +76,7 @@ STEP 2 - Post-process the APREF cumulative solution
 	
 	# On GDA2020 machine:
 	
-		>>> cd /home/fedora/run_scripts/
+		>>> cd ~/run_scripts/
 		>>> vim run_APREF_STEP_2.sh 
 		
 		NOW: edit the APREF solution date at top of script.
@@ -88,22 +88,22 @@ STEP 2 - Post-process the APREF cumulative solution
 STEP 3 - Upload post-processed APREF
 ------
 	
-	# On GDA2020 machine: If exists, delete the old version in /home/fedora/apref/ 
+	# On GDA2020 machine: If exists, delete the old version in ~/apref/ 
 	
-		>>> cd /home/fedora/apref/
+		>>> cd ~/apref/
 		>>> rm apref* disconts*
 	
 	# On GDA2020 machine: Setup the new apref version
 	
-		>>> cd /home/fedora/apref/YYYYMMDD
+		>>> cd ~/apref/YYYYMMDD
 		>>> cp apref* disconts* ../
 		>>> cd ../
 		>>> rm apref*.VEL
 		>>> aws s3 ls s3://gda2020-ngca/adjustmentData/
 		>>> aws s3 rm s3://gda2020-ngca/adjustmentData/ --recursive --exclude "*" --include "apref*"
 		>>> aws s3 rm s3://gda2020-ngca/adjustmentData/ --recursive --exclude "*" --include "disconts*"
-		>>> aws s3 cp /home/fedora/apref/ s3://gda2020-ngca/adjustmentData/ --recursive --exclude "*" --include "apref*"
-		>>> aws s3 cp /home/fedora/apref/ s3://gda2020-ngca/adjustmentData/ --recursive --exclude "*" --include "disconts*"
+		>>> aws s3 cp ~/apref/ s3://gda2020-ngca/adjustmentData/ --recursive --exclude "*" --include "apref*"
+		>>> aws s3 cp ~/apref/ s3://gda2020-ngca/adjustmentData/ --recursive --exclude "*" --include "disconts*"
 	
 	NOW: email the AWG
 	
@@ -114,7 +114,7 @@ STEP 4 - Copy post-processed APREF TO NADJ machine
 
 	# On NADJ machine: Delete the old apref version
 	
-		>>> cd /home/fedora/Data/
+		>>> cd ~/Data/
 		>>> rm apref* disconts* 
 		
 		This should be:
@@ -185,7 +185,7 @@ Run script: 	run_NGCA_PRE_PROCESSING.sh
 	
 	# On GDA2020 machine
 	
-		>>> cd /home/fedora/run_scripts/
+		>>> cd ~/run_scripts/
 		>>> vim run_NGCA_PRE_PROCESSING.sh 
 		
 		NOW: edit the NGCA archive date at top of script.
@@ -207,7 +207,7 @@ STEP 3 - AUSPOS Processing
 
 	# On GDA2020 machine:
 	
-		>>> cd /home/fedora/ngca/[JURIS]
+		>>> cd ~/ngca/[JURIS]
 		>>> scp -i ~/.ssh/ga_ngca -r $archive geodesy@[IP ADDRESS]:/data/craig/ 
 
 	# On AUSPOS/Geodesy machine:
@@ -240,7 +240,7 @@ STEP 3 - AUSPOS Processing
 	
 	# On GDA2020:
 	
-		>>> cd /home/fedora/run_scripts/
+		>>> cd ~/run_scripts/
 		>>> vim run_NGCA_DOWNLOAD_FROM_AUSPOS.sh
 		
 		NOW: - edit the NGCA archive date at top of script.
@@ -265,11 +265,11 @@ STEP 4 - Post-processing
 
 Run script: 	run_NGCA_POST_PROCESSING.sh
 
-+ Needs DynaML.xsd in /home/fedora/.
++ Needs DynaML.xsd in ~/.
 
 	# On GDA2020 machine:
 	
-		>>> cd /home/fedora/RUN-SCRIPTS/
+		>>> cd ~/RUN-SCRIPTS/
 		>>> vim run_NGCA_POST_PROCESSING.sh 
 		
 		NOW: 	- edit the NGCA archive date at top of script.
@@ -285,7 +285,7 @@ STEP 5 - Finish NGCA
 
 	# On GDA2020 machine:
 	
-		>>> cd /home/fedora/ngca/sent/
+		>>> cd ~/ngca/sent/
 		>>> ls -lotr
 	
 		NOTE: 

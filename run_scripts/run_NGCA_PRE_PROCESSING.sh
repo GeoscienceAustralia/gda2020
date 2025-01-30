@@ -8,8 +8,8 @@ JURIS_LIST=("tas" "vic" "sa" "wa" "nt" "qld" "nsw")
 #JURIS_LIST=("act")
 
 # Create automatic notes file (this will remove existing file)
-rm -f /home/fedora/ngca/auto_notes_$ARCHIVE.txt
-touch /home/fedora/ngca/auto_notes_$ARCHIVE.txt
+rm -f ~/ngca/auto_notes_$ARCHIVE.txt
+touch ~/ngca/auto_notes_$ARCHIVE.txt
 
 # Commentary 
 printf "\nRunning script to organise NGCA files up until the stage before AUSPOS processing."
@@ -19,7 +19,7 @@ for JURIS in ${JURIS_LIST[*]}; do
 
     # Navigate to jurisdiction directory
     printf "\nNavigating to ${JURIS^^} archive directory...\n"
-    cd /home/fedora/ngca/$JURIS/$ARCHIVE
+    cd ~/ngca/$JURIS/$ARCHIVE
 
     # Run verifySub.py
     printf "\nexecuting verifySub.py for ${JURIS^^}...\n"
@@ -37,7 +37,7 @@ for JURIS in ${JURIS_LIST[*]}; do
     NumRINEX=$(ls *.*O | wc -l)
 
     # Write number of jobs to a notes file"
-    echo "${JURIS^^} has $NumRINEX RINEX and $NumJobs jobs" >> /home/fedora/ngca/auto_notes_$ARCHIVE.txt
+    echo "${JURIS^^} has $NumRINEX RINEX and $NumJobs jobs" >> ~/ngca/auto_notes_$ARCHIVE.txt
 
     # Commentary
     printf "\nFinished working on ${JURIS^^}\n"

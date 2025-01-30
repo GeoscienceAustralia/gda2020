@@ -5,6 +5,7 @@
 import glob
 import os
 import sys
+from pathlib import Path
 
 # Create lists of stations and 4-character IDs to ignore
 ignoreStns = ['6635/ 1199', '6626/ 1035', '6429/ 2959', '6731/ 1089',
@@ -35,7 +36,7 @@ ignoreStns = ['6635/ 1199', '6626/ 1035', '6429/ 2959', '6731/ 1089',
         '6433/ 2350', '6728/ 1000']
 
 # Read in the APREF station names
-for file in glob.glob('/home/fedora/apref/apref*.disconts'):
+for file in glob.glob(f'{Path.home()}/apref/apref*.disconts'):
     aprefFile = file
 aprefStns = set()
 for line in open(aprefFile):
@@ -48,7 +49,7 @@ allIds = {}
 allStns = {}
 trans1 = {}
 trans2 = {}
-os.chdir('/home/fedora/transTables')
+os.chdir(f'{Path.home()}/transTables')
 for file in glob.glob('*.csv'):
     print('Checking ' + file + '...')
     state = file[0:2]

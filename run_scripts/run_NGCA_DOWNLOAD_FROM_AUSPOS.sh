@@ -20,7 +20,7 @@ read -p "Hit [ENTER] key if correct, OR [Ctrl C] if you want to abort..."
 
 # Navigate to jurisdiction directory
 printf "\nNavigating to ${JURIS^^} NGCA directory...\n"
-cd /home/fedora/ngca/$JURIS
+cd ~/ngca/$JURIS
 
 # Copy over SINEX files
 printf "\nCopying over SINEX files...\n"

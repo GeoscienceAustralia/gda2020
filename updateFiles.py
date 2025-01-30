@@ -7,7 +7,7 @@ correct directory on NADJ
 
 import re
 import os
-
+from pathlib import Path
 
 # Set up regular expressions
 p1 = re.compile('.csv$', re.I)
@@ -56,17 +56,17 @@ for f in os.listdir('.'):
     os.rename(f, f_new)
 
 # Remove all the old files
-os.system('rm /home/fedora/transTables/*.csv')
-os.system('rm /home/fedora/renaming/*.ignore')
-os.system('rm /home/fedora/nearStns/*.near')
-os.system('rm /home/fedora/renaming/*.renaming')
+os.system('rm ~/transTables/*.csv')
+os.system('rm ~/renaming/*.ignore')
+os.system('rm ~/nearStns/*.near')
+os.system('rm ~/renaming/*.renaming')
 
 # Move the files to their correct directory
-os.system ('mv *.csv /home/fedora/transTables/')
-os.system ('mv *.renaming /home/fedora/renaming/')
-os.system ('mv *.ignore /home/fedora/renaming/')
-os.system ('mv *.near /home/fedora/nearStns/')
+os.system ('mv *.csv ~/transTables/')
+os.system ('mv *.renaming ~/renaming/')
+os.system ('mv *.ignore ~/renaming/')
+os.system ('mv *.near ~/nearStns/')
 
 # Remove empty directory
-os.chdir('/home/fedora/')
+os.chdir(f'{Path.home()}')
 os.system('rm -r aws_files/')

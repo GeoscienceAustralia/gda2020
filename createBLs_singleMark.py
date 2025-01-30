@@ -64,11 +64,12 @@ import sys, os, datetime, re
 from glob import glob
 from numpy import matrix, zeros, copy
 from shutil import rmtree
+from pathlib import Path
 
 # Move to jurisdiction's directory
 d = os.getcwd() 
 jur = d.split('/')[-2]
-os.chdir('/home/fedora/ngca/' + jur)
+os.chdir(f'{Path.home()}/ngca/' + jur)
 
 # Check that the necessary directories exist
 if not os.path.isdir('rinexantls'):
@@ -89,7 +90,7 @@ os.mkdir('baselines/')
 # Read in the discontinuity information for renaming purposes
 disconts = {}
 stnsWdiscont = set()
-for discontFile in glob('/home/fedora/apref/apref*.disconts'):
+for discontFile in glob(f'{Path.home()}/apref/apref*.disconts'):
     pass
 for line in open(discontFile):
     if line[4] == '_':
