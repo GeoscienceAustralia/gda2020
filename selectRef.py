@@ -16,7 +16,7 @@ os.chdir(f'{Path.home()}/ngca/' + j + '/sinexFiles')
 # those that have more than 2 years of data
 go = 0
 constraints = []
-for f in glob('/home/fedora/apref/apref*.snx'):
+for f in glob(f'{Path.home()}/apref/apref*.snx'):
     aprefSol = f
 f = open(aprefSol)
 for line in f:

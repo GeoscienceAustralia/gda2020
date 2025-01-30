@@ -29,12 +29,12 @@ os.system('mv *NGCA* ../')
 os.chdir('../')
 os.mkdir('adjustments')
 os.chdir('adjustments')
-os.system('cp /home/fedora/ngca/' + jur + '/baselines/*.adj .')
+os.system('cp ~/ngca/' + jur + '/baselines/*.adj .')
 os.chdir('../')
 os.mkdir('feedback')
 os.chdir('feedback')
 for item in ['sigma0.dat', 'checkNgca.log']:
-    os.system('cp /home/fedora/ngca/' + jur + '/baselines/' + item + ' .')
+    os.system('cp ~/ngca/' + jur + '/baselines/' + item + ' .')
 for item in ['log_4_submit.txt', 'selectRef.log', 'verifySub.log']:
     target = '../../../' + jur + '/' + date + '/' + item
     sys_cmd = 'cp ../../../' + jur + '/' + date + '/' + item + ' .'
