@@ -32,7 +32,7 @@ else:
     juris = [args.j]
 
 # Compile regular expressions
-p1 = re.compile('\w{8}\.\d{2}o$', re.I)
+p1 = re.compile(r'\w{8}\.\d{2}o$', re.I)
 
 # Move to the NGCA directory
 print('* Moving to the NGCA directory')

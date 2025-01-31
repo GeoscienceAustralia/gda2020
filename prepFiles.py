@@ -12,7 +12,7 @@ import sys
 
 
 # Compile the regular expressions
-p1 = re.compile('^\w{8}\.\d{2}o$', re.I)
+p1 = re.compile(r'^\w{8}\.\d{2}o$', re.I)
 
 # Create the directory for the individual RINEX antenna information files
 os.mkdir('rinexantls')

@@ -8,8 +8,8 @@ import sys
 
 
 # Create the regular expression
-p1 = re.compile('^Adjusted Measurements')
-p2 = re.compile('^Adjusted Coordinates')
+p1 = re.compile(r'^Adjusted Measurements')
+p2 = re.compile(r'^Adjusted Coordinates')
 
 # Open the input file and read in the lines
 if len(sys.argv) != 2:

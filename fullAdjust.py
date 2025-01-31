@@ -9,7 +9,7 @@ import glob
 import re
 from pathlib import Path
 
-p1 = re.compile('\d{8}$')
+p1 = re.compile(r'\d{8}$')
 d = os.getcwd()
 jur = d.split('/')[-2]
 jur = jur.upper()

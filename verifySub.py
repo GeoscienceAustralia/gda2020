@@ -38,19 +38,19 @@ with open(f'{Path.home()}/antTypes.dat', 'r') as f:
         antTypes.add(cols[0])
         
 # Compile the regular expressions
-p1 = re.compile('^\w{8}\.\d{2}o$', re.I)
+p1 = re.compile(r'^\w{8}\.\d{2}o$', re.I)
 p2 = re.compile(r'RINEX VERSION / TYPE')
 p3 = re.compile(r'ANT # / TYPE')
 p4 = re.compile(r'ANTENNA: DELTA H/E/N')
-p5 = re.compile('^\d+\.?\d+$')
-p6a_str = '^>\s\d{4}\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}\d{1,2}'
-p6a_str += '\s{1,2}\d{1,2}\.\d{,7}'
+p5 = re.compile(r'^\d+\.?\d+$')
+p6a_str = r'^>\s\d{4}\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}\d{1,2}'
+p6a_str += r'\s{1,2}\d{1,2}\.\d{,7}'
 p6a = re.compile(p6a_str)
-p6b_str = '^\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}'
-p6b_str += '\d{1,2}\s{1,2}\d{1,2}\.\d{,7}'
+p6b_str = r'^\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}'
+p6b_str += r'\d{1,2}\s{1,2}\d{1,2}\.\d{,7}'
 p6b = re.compile(p6b_str)
-p7 = re.compile('^\s\d\s')
-p8 = re.compile('^\d{4}')
+p7 = re.compile(r'^\s\d\s')
+p8 = re.compile(r'^\d{4}')
 
 # Create a datetime object for the earliest IGS products
 igs_start = datetime.datetime(1994, 6, 1, 0, 0, 0)

@@ -10,10 +10,10 @@ import os
 from pathlib import Path
 
 # Set up regular expressions
-p1 = re.compile('.csv$', re.I)
-p2 = re.compile('.ignore$', re.I)
-p3 = re.compile('.near$', re.I)
-p4 = re.compile('.renaming$', re.I)
+p1 = re.compile(r'.csv$', re.I)
+p2 = re.compile(r'.ignore$', re.I)
+p3 = re.compile(r'.near$', re.I)
+p4 = re.compile(r'.renaming$', re.I)
 
 # Define the jurisdictions
 jurisdictions = ['nsw', 'act', 'vic', 'tas', 'sa', 'wa', 'nt', 'qld']

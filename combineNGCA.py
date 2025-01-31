@@ -4,7 +4,7 @@ import sys
 import os
 import re
 
-p1 = re.compile('\d{8}$')
+p1 = re.compile(r'\d{8}$')
 d = os.getcwd()
 jur = d.split('/')[-2]
 os.chdir('../')
