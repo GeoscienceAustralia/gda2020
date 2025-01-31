@@ -5,7 +5,7 @@
 # in their .near files
 
 # Read in the APREF stations
-for (glob'/home/fedora/apref*.disconts') {$file = $_};
+for (glob'~/apref*.disconts') {$file = $_};
 open APREF, $file;
 while (<APREF>) {
     unless (/^\#/) {

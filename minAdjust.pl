@@ -3,11 +3,11 @@
 # This script runs a minimally-constrained adjustment for each baseline cluster
 
 # If necessary, copy over the files needed to do the adjustment
-`cp /home/fedora/DynaML.xsd .` unless (-e 'DynaML.xsd');
+`cp ~/DynaML.xsd .` unless (-e 'DynaML.xsd');
 unlink glob'apref*.snx';
-`cp /home/fedora/apref/apref*.snx .`;
+`cp ~/apref/apref*.snx .`;
 unlink glob'disconts*.snx';
-`cp /home/fedora/apref/disconts*.snx .`;
+`cp ~/apref/disconts*.snx .`;
 for (glob'disconts*.snx') {$discontsFile = $_}
 
 # Create a list of APREF stations

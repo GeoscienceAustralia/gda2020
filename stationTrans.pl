@@ -9,8 +9,9 @@ $d = `pwd`;
 @d = split('/', $d);
 $jur = $d[-2];
 $jur = 'qld' if ($jur eq 'surat');
-$camp = '/home/fedora/ngca/' . $jur . '/baselines/';
-chdir '/home/fedora/transTables';
+$homePath = glob('~'); 
+$camp = $homePath . '/ngca/' . $jur . '/baselines/';
+chdir "$homePath/transTables";
 $transT = $jur . 'TransTable*.csv';
 `cp $transT $camp`;
 for (glob"$transT") {
@@ -25,7 +26,7 @@ for (glob"$transT") {
 }
 
 # Read in the APREF stations and their discontinuities
-for (glob'/home/fedora/apref/disconts????????.snx') {
+for (glob'~/apref/disconts????????.snx') {
     open APREF, $_;
     while (<APREF>) {
         unless (/\*-----|%ENDSNX|-SOLUTION|\+SOLUTION/) {

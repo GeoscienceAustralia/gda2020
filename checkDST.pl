@@ -28,7 +28,7 @@ if ($#dstFiles == 0) {
     $dFile = $dstFiles[$fileNum - 1];
 }
 
-for (glob'/home/fedora/apref*.disconts') {$file = $_};
+for (glob'~/apref*.disconts') {$file = $_};
 open APREF, $file;
 while (<APREF>) {
     unless (/^\#/) {
@@ -37,7 +37,7 @@ while (<APREF>) {
     }
 }
 
-for $file (glob'/home/fedora/renaming/*.renaming') {
+for $file (glob'~/renaming/*.renaming') {
     open IN, $file;
     while (<IN>) {
         unless (/^!\#/) {
@@ -49,7 +49,7 @@ for $file (glob'/home/fedora/renaming/*.renaming') {
     }
 }
 
-for $file (glob'/home/fedora/renaming/*.ignore') {
+for $file (glob'~/renaming/*.ignore') {
     open IN, $file;
     while (<IN>) {
         chomp;
