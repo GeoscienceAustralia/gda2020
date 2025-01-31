@@ -184,7 +184,7 @@ for f in sorted(files):
             fout1.write(f.upper() + ' ' + ant + ' ' + height + '\n')
         
             # Write out: file name, start epoch, end epoch, duration, excess
-            l = '{:12s} {} {} {:6d} {:<6d}\n'.\
+            l = '{:12s} {} {} {:6d}\n'.\
                 format(f.upper(), epochs[0], epochs[-1], int(duration))
             fout2.write(l)
         else:
