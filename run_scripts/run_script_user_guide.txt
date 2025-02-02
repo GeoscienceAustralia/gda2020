@@ -423,10 +423,15 @@ Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solv
 + This section covers the steps to run a national adjustment.
 + It is for the Windows machine (NADJ Windows), a temporary solution whilst it 
   is investigated how to run the national adjustment on Linux again.
-+ The JADJ QA/QC refers to these steps:
-	1. Duplicate station check.
-	2. Near station check.
-	3. 1-iteration adjustment
++ The NADJ processing refers to these steps:
+	1. A final duplicate station search (only to keep the output files for posterity).
+	2. A final near station search (only to keep the output files for posterity). 
+	3. National adjustment. 
+	4. Add Type-B uncertainties. 
+	5. Package up files to upload to s3.
++ Steps in AWS console to connect to Windows machine: 
+
+	> Systems Manager > Fleet Manager > Node Actions > Connect > Connect with Remote Desktop > Key pair
 
 	# On NADJ Machine:
 
@@ -457,7 +462,7 @@ Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solv
 		>>> python runNatAdjust.py
 
 		NOTE: - Usually 2-3 iterations (~27 hours of processing time). 
-		      - When finished, run the following commands for packaging up of NADJ. 
+		      - When finished, run the following commands for post-processing and packaging up of NADJ. 
 
 
 
