@@ -420,53 +420,94 @@ NADJ PROCESSING - !NEED TO UPDATE THIS! | !IN DEVELOPMENT!
 Schedule: 	Run NADJ on 1st of every 2nd month.
 Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solved). 
 
-	+ Run as normal
++ This section covers the steps to run a national adjustment.
++ It is for the Windows machine (NADJ Windows), a temporary solution whilst it 
+  is investigated how to run the national adjustment on Linux again.
++ The JADJ QA/QC refers to these steps:
+	1. Duplicate station check.
+	2. Near station check.
+	3. 1-iteration adjustment
+
+	# On NADJ Machine:
+
+	+ Open the command prompt, move to working directory:
+
+		>>> cd \Data
+
+	+ Run the duplicate station search:
+
+		>>> python runNatAdjust.py -s dup
+		>>> perl checkDST.pl
+		>>> move gda2020_YYYYMMDD.dup.dup searches\
+		>>> del gda2020_YYYYMMDD.dup*
 	
-		# Run the national adjustment (and wait for it to finish):
-			
-			>>> nohup runNatAdjust.pl &
+	+ Run the near station search:
+
+		>>> python runNatAdjust.py -s near
+		>>> move gda2020_YYYYMMDD.near.dst nearStns
+		>>> del gda2020_YYYYMMDD.near.bat
+		>>> cd nearStns
+		>>> perl filterNearStns.pl
+		>>> move gda2020_YYYYMMDD.near.dst ..\searches
+		>>> del gda2020_YYYYMMDD.near.dst.bak notUsedIgnore.dat
+		>>> cd ..
+
+	+ Run the national adjustment (~9 hours/iteration)
+
+		>>> python runNatAdjust.py
+
+		NOTE: - Usually 2-3 iterations (~27 hours of processing time). 
+		      - When finished, run the following commands for packaging up of NADJ. 
+
+
+
+
+
+
+
+
+
+
+
+	# Organise, and add Type-B uncertainties:
 		
-			NOTE: When finished, run the following commands for post-processing and packaging of NADJ:
-			
-		# Organise, and add Type-B uncertainties:
-			
-			>>> mv nohup.out adjustments/gda2020_YYYYMMDD 
-			>>> cd adjustments/gda2020_YYYYMMDD
-			>>> addTypeB.py
-			
-		# Organise:
+		>>> mv nohup.out adjustments/gda2020_YYYYMMDD 
+		>>> cd adjustments/gda2020_YYYYMMDD
+		>>> addTypeB.py
+		
+	# Organise:
 
-			>>> cd ..
-			>>> cp -r gda2020_YYYYMMDD sent/ 
-			>>> zip -r gda2020_YYYYMMDD.zip gda2020_YYYYMMDD/
-			>>> rm -r gda2020_YYYYMMDD/
-			>>> cd sent/gda2020_YYYYMMDD/
-			>>> cp ../gda2020_[PREVIOUS]/gda2020_[PREVIOUS].phased-stage.xyz ./
-			
-		# Calculate difference between adjustments:
-		- Order of solutions doesn't matter.
-			
-			>>> dynaDiff.py gda2020_YYYYMMDD.phased-stage.xyz gda2020_YYYYMMDD.phased-stage.xyz
-			
-		# Organsise:
+		>>> cd ..
+		>>> cp -r gda2020_YYYYMMDD sent/ 
+		>>> zip -r gda2020_YYYYMMDD.zip gda2020_YYYYMMDD/
+		>>> rm -r gda2020_YYYYMMDD/
+		>>> cd sent/gda2020_YYYYMMDD/
+		>>> cp ../gda2020_[PREVIOUS]/gda2020_[PREVIOUS].phased-stage.xyz ./
+		
+	# Calculate difference between adjustments:
+	- Order of solutions doesn't matter.
+		
+		>>> dynaDiff.py gda2020_YYYYMMDD.phased-stage.xyz gda2020_YYYYMMDD.phased-stage.xyz
+		
+	# Organsise:
 
-			>>> rm *.sh *.asl *.aml *.d *.dbid *.dnaproj *.map *.data *.rft *.seg
-			>>> mkdir inputFiles
-			>>> cp ~/AUSGeoid2020_20180201.gsb ~/DynaML.xsd ~/apref20220326* ~/disconts20220326.snx ~/stn/*.xml ~/msr/*.xml inputFiles/ 
-			>>> cd ..
-			>>> zip -r gda2020_YYYYMMDD.zip gda2020_YYYYMMDD/
-			
-		# Upload to FTP, and email AWG:
+		>>> rm *.sh *.asl *.aml *.d *.dbid *.dnaproj *.map *.data *.rft *.seg
+		>>> mkdir inputFiles
+		>>> cp ~/AUSGeoid2020_20180201.gsb ~/DynaML.xsd ~/apref20220326* ~/disconts20220326.snx ~/stn/*.xml ~/msr/*.xml inputFiles/ 
+		>>> cd ..
+		>>> zip -r gda2020_YYYYMMDD.zip gda2020_YYYYMMDD/
+		
+	# Upload to FTP, and email AWG:
 
-			>>> ftp ftp.ga.gov.au
-			>>> cd adjustments/
-			>>> del gda2020_YYYYMMDD.zip 	(delete the oldest adjustment)
-			>>> put gda2020_YYYYMMDD.zip    (upload the newest adjustment)
-			
-			NOW: email AWG using the template email. 
-					+ The station and measurement info comes from the .imp file.
-					+ everything else comes from the .adj.nstat file.
-					
-			---- DONE ----
+		>>> ftp ftp.ga.gov.au
+		>>> cd adjustments/
+		>>> del gda2020_YYYYMMDD.zip 	(delete the oldest adjustment)
+		>>> put gda2020_YYYYMMDD.zip    (upload the newest adjustment)
+		
+		NOW: email AWG using the template email. 
+				+ The station and measurement info comes from the .imp file.
+				+ everything else comes from the .adj.nstat file.
+				
+		---- DONE ----
 
 . 
