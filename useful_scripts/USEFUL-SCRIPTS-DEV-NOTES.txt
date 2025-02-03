@@ -30,8 +30,8 @@ USEFUL SCRIPTS - Notes
 	  these to Python and add them to official repository when time allowed. For now
 	  though, they are located here as useful scripts so they aren't mixed with the 
           operational scripts. 	  
-	* There was some work into a JADJ QA/QC script, but it is in early development and
-	  not worth placing here. 
+	* There is some work into a JADJ QA/QC script, but it is in early development,
+	  nonetheless the script jadj_summary.jl is there too. 
 	* There is a Julia programming language setup guide below.
 	* These scripts are designed to be run on a seperate machine than the operation
 	  processing machines. They download solutions from the operations s3 bucket 
