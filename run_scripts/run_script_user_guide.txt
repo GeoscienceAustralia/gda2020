@@ -457,12 +457,67 @@ Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solv
 		>>> del gda2020_YYYYMMDD.near.dst.bak notUsedIgnore.dat
 		>>> cd ..
 
-	+ Run the national adjustment (~9 hours/iteration)
+	+ Run the national adjustment (~9.5 hours/iteration)
 
 		>>> python runNatAdjust.py
 
-		NOTE: - Usually 2-3 iterations (~27 hours of processing time). 
-		      - When finished, run the following commands for post-processing and packaging up of NADJ. 
+		NOTE: - Usually 2-3 iterations (~20-30 total hours of processing time). 
+		      - When finished, run the next steps for organising files and post-processing. 
+
+	+ Add Type-B uncertainties to the adjusted coordinates
+
+		>>> copy addTypeB.py adjustments\gda2020_YYYYMMDD
+		>>> cd adjustments\gda2020_YYYYMMDD
+		>>> python addTypeB.py
+		>>> del addTypeB.py
+		>>> cd ..
+		>>> mkdir sent\gda2020_YYYYMMDD
+		>>> copy gda2020_YYYYMMDD\* sent\gda2020_YYYYMMDD
+		>>> cd ..
+
+	+ Create adjustment comparison
+
+		>>> copy dynaDiff.py adjustments\sent\gda2020_YYYYMMDD
+		>>> copy big_nstats.py adjustments\sent\gda2020_YYYYMMDD
+		>>> cd adjustments\sent\gda2020_YYYYMMDD
+		>>> copy ..\gda2020_[PREVIOUS]\gda2020_[PREVIOUS].phased-stage.xyz .\
+		>>> python dynaDiff.py gda2020_YYYYMMDD.phased-stage.xyz gda2020_YYYYMMDD.phased-stage.xyz
+		>>> del *.sh *.asl *.aml *.d *.dbid *.dnaproj *.map *.data *.rft *.seg
+		
+	+ Identify largest N-statistics
+
+		>>> python big_nstats.py gda2020_YYYYMMDD.phased-stage.adj
+		>>> del big_nstats.py dynaDiff.py
+
+	+ Prepare folder
+
+		>>> mkdir inputFiles
+		>>> cd ..\..\..\
+		>>> copy AUSGeoid2020_20180201.gsb adjustments\sent\gda2020_YYYYMMDD\inputFiles
+		>>> copy DynaMl.xsd adjustments\sent\gda2020_YYYYMMDD\inputFiles
+		>>> copy aprefYYYMMDD* adjustments\sent\gda2020_YYYYMMDD\inputFiles
+		>>> copy disconts*.snx adjustments\sent\gda2020_YYYYMMDD\inputFiles
+		>>> copy stn\*.xml adjustments\sent\gda2020_YYYYMMDD\inputFiles
+		>>> copy msr\*.xml adjustments\sent\gda2020_YYYYMMDD\inputFiles
+		>>> cd adjustments\sent
+		>>> tar -a -c -f gda2020_YYYYMMDD.zip gda2020_YYYYMMDD
+
+	+ Upload to s3
+
+		>>> aws s3 cp gda2020_YYYYMMDD.zip s3://gda2020-ngca/adjustments/
+
+		NOTE: - Can think about a schedule here to arhicve the older ones. For example, could keep
+			the latest ten adjustements there, and move the older ones to long-term storage.
+		      - Email the AWG. 
+		
+
+	
+		
+
+
+
+		
+
 
 
 
