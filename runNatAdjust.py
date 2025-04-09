@@ -163,7 +163,7 @@ else:
     # Delete the large unnecessary files and move the rest to the adjustments
     # folder
     fout.write('rm -f *.mtx *.bms *.bst\n')
-    fout.write('mkdir adjustments/gda2020_' + epoch + '\n')
+    fout.write(r'mkdir adjustments/gda2020_' + epoch + '\n')
     fout.write('cp *.adj.stn.xml apriori.xml\n')
     fout.write('mv *' + epoch + '* adjustments/gda2020_' + epoch + '\n')
     fout.close()
