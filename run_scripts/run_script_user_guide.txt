@@ -384,7 +384,7 @@ Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solv
 			automatically assign the 'Ignore' flag to the orthometric measurements. 
 		      - Until this is done, we need to manually assign the 'Ignore' flag to these two already identified 
  			orthometric height measurements in the SA measurement file (SA_GDA2020_YYYYMMMDD_msr.xml). 
-		      - Do this manually by using Textpad (or something else), i.e. change '<Ignore/>' to '<Ignore>*<\Ignore>'
+		      - Do this manually by using Textpad (or something else), i.e. change '<Ignore/>' to '<Ignore>*</Ignore>'
 		        for these two sites:
 						267300640
 						313200220
