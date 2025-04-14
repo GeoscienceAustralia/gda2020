@@ -478,7 +478,7 @@ Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solv
 	+ Create adjustment comparison
 
 		>>> copy dynaDiff.py adjustments\sent\gda2020_YYYYMMDD
-		>>> copy big_nstats.py adjustments\sent\gda2020_YYYYMMDD
+		>>> copy big_ntstats.py adjustments\sent\gda2020_YYYYMMDD
 		>>> cd adjustments\sent\gda2020_YYYYMMDD
 		>>> copy ..\gda2020_[PREVIOUS]\gda2020_[PREVIOUS].phased-stage.xyz .\
 		>>> python dynaDiff.py gda2020_YYYYMMDD.phased-stage.xyz gda2020_YYYYMMDD.phased-stage.xyz
