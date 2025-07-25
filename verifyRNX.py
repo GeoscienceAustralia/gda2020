@@ -90,6 +90,15 @@ sampling = statistics.median(deltas)
 # Calculate the duration of the RINEX file
 duration = len(deltas) * sampling
 
+def format_seconds_to_hms(seconds_total):
+    td = datetime.timedelta(seconds=seconds_total)
+    hours, remainder = divmod(td.seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f"{hours} hours {minutes} mins {seconds} secs"
+# 05:59:00 hours in seconds
+
+print("Total time ", format_seconds_to_hms(duration))
+
 # 05:59:00 hours in seconds
 if duration < 21540:
     sys.exit('RINEX duration is less than 6 hours (' + str(duration) + ')')
