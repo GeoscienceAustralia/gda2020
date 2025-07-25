@@ -18,14 +18,14 @@ import statistics
 
 # Compile the regular expressions
 p1 = re.compile(r'RINEX VERSION / TYPE')
-p2_str = '^>\s\d{4}\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}\d{1,2}'
-p2_str += '\s{1,2}\d{1,2}\.\d{,7}'
+p2_str = r'^>\s\d{4}\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}\d{1,2}'
+p2_str += r'\s{1,2}\d{1,2}\.\d{,7}'
 p2 = re.compile(p2_str)
-p3_str = '^\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}'
-p3_str += '\d{1,2}\s{1,2}\d{1,2}\.\d{,7}'
+p3_str = r'^\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}\d{1,2}\s{1,2}'
+p3_str += r'\d{1,2}\s{1,2}\d{1,2}\.\d{,7}'
 p3 = re.compile(p3_str)
-p4 = re.compile('^\s\d\s')
-p8 = re.compile('^\d{4}')
+p4 = re.compile(r'^\s\d\s')
+p8 = re.compile(r'^\d{4}')
 
 # Read in the RINEX file
 rnx = sys.argv[1]
