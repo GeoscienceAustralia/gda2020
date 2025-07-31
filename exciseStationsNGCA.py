@@ -21,7 +21,7 @@ import geodepy.gnss
 os.system('cp ~/apref/workDir/gda2020.dat ../sinexFiles')
 
 # Create a list of APREF stations to exclude
-exclude = ['MAC1', 'CEDU', 'CA19', 'HOBA', 'CCPL', 'IGWG'];
+exclude = ['MAC1', 'CEDU', 'CA19', 'HOBA', 'CCPL', 'IGWD'];
 
 # Loop over the input SINEX files
 os.chdir('../sinexFiles')
