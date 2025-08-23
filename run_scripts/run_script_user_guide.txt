@@ -483,6 +483,7 @@ Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solv
 		>>> copy ..\gda2020_[PREVIOUS_start]\gda2020_[PREVIOUS_end].phased-stage.xyz .\
 		>>> python dynaDiff.py gda2020_YYYYMMDD.phased-stage.xyz gda2020_YYYYMMDD.phased-stage.xyz
 		>>> del *.sh *.asl *.aml *.d *.dbid *.dnaproj *.map *.data *.rft *.seg
+creates a .csv file
 		
 	+ Identify largest N-statistics
 
