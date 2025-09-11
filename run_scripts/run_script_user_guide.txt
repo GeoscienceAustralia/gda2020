@@ -170,7 +170,8 @@ STEP 1 - Download the archives
 	
 + Ask Carl to increase the amount of available ec2s for AUSPOS (usually upto 300 or 600).
 + Currently have to give Carl our tempprary IP adress for the gda2020 machine.
-	- Note: should change our gda2020 machine to have a static IP. 
+	- Note: should change our gda2020 machine to have a static IP. [Done]
+    - Note: We have static IP for GDA2020 machine [2025].
 	- Note: should change method of connection to session manager.  
 	
 ------	
@@ -291,9 +292,9 @@ STEP 5 - Finish NGCA
 		NOTE: 
 			* the archive(s) will be the last file(s) listed.
 			* worth checking the size of the .zip file for basic check. 
-
-	NOW: email jurisiction(s). 
-	NOW: if all NGCA is complete, turn off gda2020 machine.
+    Note: We have portal that is planned to be automated upto here A lot of testing is required.
+	Action: email jurisiction(s). 
+	Action: After NGCA completion, turn off gda2020 machine.
 	
 
 =========
@@ -320,6 +321,7 @@ Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solv
   If it is > 50 than something could be wrong. Fifty is an uninformed guess for a quality 
   sigma-0 threshold. I have not done tests to identify what threshold for a single-iteration 
   sigma-0 value would make sense.
+- Action: Need to review JADJ QA/QC
 + Steps in AWS console to connect to Windows machine: 
 
 	> Systems Manager > Fleet Manager > Node Actions > Connect > Connect with Remote Desktop > Key pair
@@ -483,6 +485,7 @@ Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solv
 		>>> copy ..\gda2020_[PREVIOUS_start]\gda2020_[PREVIOUS_end].phased-stage.xyz .\
 		>>> python dynaDiff.py gda2020_YYYYMMDD.phased-stage.xyz gda2020_YYYYMMDD.phased-stage.xyz
 		>>> del *.sh *.asl *.aml *.d *.dbid *.dnaproj *.map *.data *.rft *.seg
+    + creates a .csv file
 		
 	+ Identify largest N-statistics
 
@@ -513,3 +516,4 @@ Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solv
 
 	
 --- END OF DOCUMENT ---
+
