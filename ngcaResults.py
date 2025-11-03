@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# v2 - Added .xyz to file outputs in /other/
+# NGCA Dev machine sends archives to s3://gda2020-ngca/2025_Testing/NGCA/
+
 import sys
 import os
 import shutil
@@ -43,8 +46,14 @@ for item in ['log_4_submit.txt', 'selectRef.log', 'verifySub.log']:
 os.chdir('../')
 os.mkdir('other')
 os.chdir('other')
-os.system('cp ~/ngca/' + jur + '/' + date + '/nameChanges.dat ./' )
+# if not doing name changes - don't look for the namechanges file
+#os.system('cp ~/ngca/' + jur + '/' + date + '/nameChanges.dat ./' )
 os.system('cp ~/transTables/' + jur + 'TransTable*.csv ./' )
+os.chdir('../')
+#add xyz directory and populate
+os.mkdir('xyz')
+os.chdir('xyz')
+os.system('cp ~/ngca/' + jur + '/baselines/*.xyz .')
 os.chdir('../')
 sys_cmd = 'cp -r ../../' + jur + '/sinexFiles ./snx'
 os.system(sys_cmd)
@@ -55,9 +64,10 @@ os.chdir('../')
 zip_cmd = 'zip -r ' + campaign + '.zip ' + campaign
 os.system(zip_cmd)
 os.system('rm -rf ' + campaign)
-cmd = 'aws s3 rm s3://gda2020-ngca/ngcaResults/ --quiet --recursive --exclude "*" --include "*' + jur.upper() + '*"'
+# Destination: s3://gda2020-ngca/2025_Testing/NGCA/
+cmd = 'aws s3 rm s3://gda2020-ngca/2025_Testing/Portal/ --quiet --recursive --exclude "*" --include "*' + jur.upper() + '*"'
 print(cmd)
 os.system(cmd)
-cmd = 'aws s3 cp ' + campaign  + '.zip s3://gda2020-ngca/ngcaResults/ --quiet'
+cmd = 'aws s3 cp ' + campaign  + '.zip s3://gda2020-ngca/2025_Testing/Portal/ --quiet'
 print(cmd)
 os.system(cmd)
