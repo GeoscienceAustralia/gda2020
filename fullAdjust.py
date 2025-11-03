@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
-# This script automates the fully constrained adjustment performed after NGCA
-# scaling
+# This script automates the fully constrained adjustment performed after NGCA scaling
+# v2 changes:
+# include E N coordinates via stn-coord-types
+# retain .xyz files for use with DynaDiff
+
 
 import sys
 import os
@@ -35,6 +38,7 @@ os.system('dnaimport -n ' + jur + '_GDA2020 ' + aprefFile +
         '_RENAMEmsr.xml -r GDA2020 --discontinuity-file ' + discontsFile)
 os.system('dnasegment ' + jur + '_GDA2020 --min 800 --max 800')
 os.system('dnaadjust ' + jur + '_GDA2020 --phased --max-iter 30 ' 
+        '--stn-coord-types "ENzPLHhXYZ" '
         '--output-adj-msr --sort-adj-msr-field 7 --export-xml-stn '
         '--export-xml-msr')
 os.system('dnaimport -n ' + jur + '_GDA2020_' + ngcaVer + 
@@ -42,8 +46,10 @@ os.system('dnaimport -n ' + jur + '_GDA2020_' + ngcaVer +
         ngcaVer + '_msr.xml -r GDA2020 --flag-unused-stations --export-xml')
 os.system('rm ' + jur + '_RENAME*')
 os.system('cp ' + jur + '_GDA2020.phased.adj temp')
+os.system('cp ' + jur + '_GDA2020.phased.xyz temp2')
 os.system('rm ' + jur + '_GDA2020[.-]*')
 os.system('mv temp ' + jur + '_GDA2020.phased.adj')
+os.system('mv temp2 ' + jur + '_GDA2020.phased.xyz')
 os.system('rm ' + jur + '_GDA2020_' + ngcaVer + '.*')
 os.system('mv ' + jur + '_GDA2020_' + ngcaVer + 'stn.xml ' + jur + '_GDA2020_' +
         ngcaVer + '.adj.xml')

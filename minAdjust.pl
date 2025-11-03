@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 
 # This script runs a minimally-constrained adjustment for each baseline cluster
+# v2 adds the E/N/z output to each file, as we are retaining xyz files.
 
 # If necessary, copy over the files needed to do the adjustment
 `cp ~/DynaML.xsd .` unless (-e 'DynaML.xsd');
@@ -68,7 +69,7 @@ for $stnFile (glob'*_all_stn.xml') {
     `$cmd`;
     $cmd = '';
     $cmd = "dnaadjust -n $network --simult $constraints ";
-    $cmd = $cmd . "--output-adj-msr --sort-adj-msr-field 7";
+    $cmd = $cmd . "--output-adj-msr --sort-adj-msr-field 7 --stn-coord-types \"ENzPLHhXYZ\" ";
     print FH "$cmd \n";
     `$cmd`;
 }

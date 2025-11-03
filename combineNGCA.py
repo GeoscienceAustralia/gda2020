@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+#changed checkngca version to v2 - accounting for ENz info in v2.
 import sys
 import os
 import re
