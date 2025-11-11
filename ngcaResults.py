@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+# renameless 20251111 - Added .xyz to file outputs in /other/
+
+# When deploying - check the target rm and cp destinations on lines 71 and 74:
+# GDA2020 Destination: s3://gda2020-ngca/ngcaResults/
+# NGCA DEV Destination: s3://gda2020-ngca/2025_Testing/NGCA/
+# -> AGRS Portal Destination: s3://gda2020-ngca/2025_Testing/Portal/
+
 import sys
 import os
 import shutil
@@ -43,8 +50,14 @@ for item in ['log_4_submit.txt', 'selectRef.log', 'verifySub.log']:
 os.chdir('../')
 os.mkdir('other')
 os.chdir('other')
-os.system('cp ~/ngca/' + jur + '/' + date + '/nameChanges.dat ./' )
+# if not doing name changes - don't look for the namechanges file
+#os.system('cp ~/ngca/' + jur + '/' + date + '/nameChanges.dat ./' )
 os.system('cp ~/transTables/' + jur + 'TransTable*.csv ./' )
+os.chdir('../')
+# add xyz directory and populate
+os.mkdir('xyz')
+os.chdir('xyz')
+os.system('cp ~/ngca/' + jur + '/baselines/*.xyz .')
 os.chdir('../')
 sys_cmd = 'cp -r ../../' + jur + '/sinexFiles ./snx'
 os.system(sys_cmd)
@@ -55,9 +68,9 @@ os.chdir('../')
 zip_cmd = 'zip -r ' + campaign + '.zip ' + campaign
 os.system(zip_cmd)
 os.system('rm -rf ' + campaign)
-cmd = 'aws s3 rm s3://gda2020-ngca/ngcaResults/ --quiet --recursive --exclude "*" --include "*' + jur.upper() + '*"'
+cmd = 'aws s3 rm s3://gda2020-ngca/2025_Testing/Portal/ --quiet --recursive --exclude "*" --include "*' + jur.upper() + '*"'
 print(cmd)
 os.system(cmd)
-cmd = 'aws s3 cp ' + campaign  + '.zip s3://gda2020-ngca/ngcaResults/ --quiet'
+cmd = 'aws s3 cp ' + campaign  + '.zip s3://gda2020-ngca/2025_Testing/Portal/ --quiet'
 print(cmd)
 os.system(cmd)

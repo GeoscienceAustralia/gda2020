@@ -292,7 +292,8 @@ STEP 5 - Finish NGCA
 		NOTE: 
 			* the archive(s) will be the last file(s) listed.
 			* worth checking the size of the .zip file for basic check. 
-    Note: We have portal that is planned to be automated upto here A lot of testing is required.
+    
+	Note: We have portal that is planned to be automated up to here - A lot of testing is required.
 	Action: email jurisiction(s). 
 	Action: After NGCA completion, turn off gda2020 machine.
 	
@@ -478,12 +479,14 @@ Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solv
 		>>> cd ..
 
 	+ Create adjustment comparison
+		NOTE: -If the NADJ date was not renamed, the PREVIOUS_start and PREVIOUS_end will be the same date, this is not always the case prior to 2025.
+			  -Dynadiff order: Previous NADJ first, then Newest NADJ second.
 
 		>>> copy dynaDiff.py adjustments\sent\gda2020_YYYYMMDD
 		>>> copy big_ntstats.py adjustments\sent\gda2020_YYYYMMDD
 		>>> cd adjustments\sent\gda2020_YYYYMMDD
 		>>> copy ..\gda2020_[PREVIOUS_start]\gda2020_[PREVIOUS_end].phased-stage.xyz .\
-		>>> python dynaDiff.py gda2020_YYYYMMDD.phased-stage.xyz gda2020_YYYYMMDD.phased-stage.xyz
+		>>> python dynaDiff.py gda2020_PREVDATE.phased-stage.xyz gda2020_YYYYMMDD.phased-stage.xyz
 		>>> del *.sh *.asl *.aml *.d *.dbid *.dnaproj *.map *.data *.rft *.seg
     + creates a .csv file
 		

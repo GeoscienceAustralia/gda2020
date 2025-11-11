@@ -14,6 +14,7 @@ h uncert: stations that have horizontal uncertainties larger than this will
 v uncert: stations that have vertical uncertainties larger than this will be
             flagged (in mm)
 """
+# renameless 20251111 - Revised the column/array numbers for added E/N/z information in adjustment scripts.            
 
 from glob import glob
 import argparse
@@ -59,21 +60,21 @@ for file in glob('*.adj'):
 
 # Check the coordinate uncertainties
         if line[20:23] == 'FFF':
-            east = line[121:133]
+            east = line[158:170]
             east = '{:.1f}'.format(float(east.strip()) * 1000)
             if float(east) > args.horizontal:
                 badU = True
                 stat = line[0:20].strip()
                 outLine = '{:40s} E   {}'.format(stat, east)
                 outLinesU.append(outLine)
-            north = line[133:143]
+            north = line[170:180]
             north = '{:.1f}'.format(float(north.strip()) * 1000)
             if float(north) > args.horizontal:
                 badU = True
                 stat = line[0:20].strip()
                 outLine = '{:40s} N   {}'.format(stat, north)
                 outLinesU.append(outLine)
-            up = line[143:153]
+            up = line[180:190]
             up = '{:.1f}'.format(float(up.strip()) * 1000)
             if float(up) > args.vertical:
                 badU = True
