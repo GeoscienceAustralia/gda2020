@@ -53,9 +53,9 @@ for snx in glob('*.AUS'):
         sub.append(line[0:4])
         # os.system('printf "looping on rinexantls line : "' + line)
         # os.system('printf "\n"')
-        debug_printarray = []
-        #trying this - want all 4 elements
-        debug_printarray = ','.join(line[0:4])
+        # debug_printarray = []
+        # trying this - want all 4 elements
+        # debug_printarray = ','.join(line[0:4])
         # os.system('printf "line elements 0-4 added to sub: "' + debug_printarray)
         # os.system('printf "\n"')
     proc = subprocess.Popen(["rdsinex", "-X", snx], stdout=subprocess.PIPE,
@@ -94,8 +94,8 @@ for snx in glob('*.AUS'):
             # os.system('printf "trying line of stn, value: "' + str(line[stn]))
             # os.system('printf "\n"')
             cols = line[stn].split()
-            debug_printarray = []
-            debug_printarray = ','.join(cols)
+            # debug_printarray = []
+            # debug_printarray = ','.join(cols)
             # os.system('printf "trying cols over line of stn, value: "' + str(debug_printarray))
             # os.system('printf "\n"')
             sumX = sumX + float(cols[4])
@@ -150,8 +150,8 @@ for snx in glob('*.AUS'):
                 # os.system('printf "\n"')
                 statDist.append(data)
 
-        os.system('printf "sorted statDist: "' + str(debug_printarray))
-        os.system('printf "\n"')
+        # os.system('printf "sorted statDist: "' + str(debug_printarray))
+        # os.system('printf "\n"')
         statDist = sorted(statDist, key=lambda x: x[1])
 
         # os.system('printf "removing ref element: "' + str(statDist[0][0]))
