@@ -3,6 +3,7 @@
 """This script prepares all the RINEX files and antenna information files for
 automatic processing
 """
+# renameless 20251111 - removing provisions for renaming of files.
 
 import re
 import os
@@ -19,24 +20,30 @@ os.mkdir('rinexantls')
 
 # Rename files that don't have a '0' before the extension. If renaming will
 # cause a name conflict then rename totally
-filenum = 0
+
+# renameless 20251111 - Do not rename any input files.
+
+# filenum = 0
+# newFile = {}
+# fout = open('nameChanges.dat', 'w')
+# for f in os.listdir('.'):
+#     if p1.match(f):
+#         if f[7:8] != '0':
+#             new_f = f[:7] + '0' + f[8:]
+#             if os.path.isfile(new_f):
+#                 conflict = True
+#                 while conflict:
+#                     new_f = '{:04d}{}0.{}'.format(filenum, f[4:7], f[9:])
+#                     filenum += 1
+#                     if not os.path.isfile(new_f):
+#                         conflict = False
+#             newFile[f] = new_f
+#             fout.write(f"{new_f} {f}\n")
+#             os.rename(f, new_f)
+# fout.close()
+
+# this needs to be declared separately, remove if reimplementing renaming above:
 newFile = {}
-fout = open('nameChanges.dat', 'w')
-for f in os.listdir('.'):
-    if p1.match(f):
-        if f[7:8] != '0':
-            new_f = f[:7] + '0' + f[8:]
-            if os.path.isfile(new_f):
-                conflict = True
-                while conflict:
-                    new_f = '{:04d}{}0.{}'.format(filenum, f[4:7], f[9:])
-                    filenum += 1
-                    if not os.path.isfile(new_f):
-                        conflict = False
-            newFile[f] = new_f
-            fout.write(f"{new_f} {f}\n")
-            os.rename(f, new_f)
-fout.close()
 
 # Read in the start time, end time, and duration for each RINEX file
 unsorted_rnx = []
@@ -140,5 +147,6 @@ while sorted_rnx:
 os.system('mv *_ls rinexantls')
 
 # Delete nameChanges.dat if empty
-if os.stat('nameChanges.dat').st_size == 0:
-    os.remove('nameChanges.dat')
+# v2 - do not check / delete
+# if os.stat('nameChanges.dat').st_size == 0:
+#     os.remove('nameChanges.dat')

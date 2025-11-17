@@ -1,11 +1,13 @@
 #!/usr/bin/bash
 
-# Archive
+# Archive date for NGCA processing, e.g. the date on which get_ngca.py has downloaded the NGCA archive contents for the jurisdictions being processed 
 ARCHIVE=20240715
 
-# List of jurisdictions to loop through (largest to smallest)
-JURIS_LIST=("act" "tas" "vic" "sa" "nt" "wa" "qld" "nsw")
-#JURIS_LIST=("act")
+# List of jurisdictions to run consecutively - increasing number of RINEX
+JURIS_LIST=("tas" "act" "vic" "sa" "nt" "wa" "nsw" "qld")
+
+# Alternatively run a single jurisdiction
+#JURIS_LIST=("tas")
 
 # Commentary 
 printf "\nWill run script to organise NGCA files after the AUSPOS processing.\n"
@@ -24,9 +26,10 @@ for JURIS in ${JURIS_LIST[*]}; do
     printf "\nCopying files to backup directory in case there are issues later...\n"
     cp -r ../$ARCHIVE/ ../sinexFiles/ ../rinexantls/ ../backup/
 
-    # Revert station names back to what they were before processed
-    printf "\nExecuting nameChanges.pl...\n"
-    nameChanges.pl
+    # renameless 20251111 - Code review has identified script is not required, supporting scripts have been modified to remove namechanges.dat functionality.
+    # Revert station names modified by prepfiles
+    # printf "\nExecuting nameChanges.pl...\n"
+    # nameChanges.pl
 
     # Coordinate transformation
     # - ITRF2020 --> ITRF2014

@@ -1,13 +1,15 @@
 #!/usr/bin/bash
 
-# Archive
+# Archive date for NGCA processing, e.g. the date on which get_ngca.py has downloaded the NGCA archive contents for the jurisdictions being processed 
 ARCHIVE=20240715
 
-# List of jurisdictions to loop through (largest to smallest)
-JURIS_LIST=("tas" "vic" "sa" "wa" "nt" "qld" "nsw")
-#JURIS_LIST=("act")
+# List of jurisdictions to run consecutively - increasing number of RINEX
+JURIS_LIST=("tas" "act" "vic" "sa" "nt" "wa" "nsw" "qld")
 
-# Create automatic notes file (this will remove existing file)
+# Alternatively run a single jurisdiction
+#JURIS_LIST=("tas")
+
+# Create automatic notes file (removes existing note file - for a full auto_note summary run all juris consecutively)
 rm -f ~/ngca/auto_notes_$ARCHIVE.txt
 touch ~/ngca/auto_notes_$ARCHIVE.txt
 
