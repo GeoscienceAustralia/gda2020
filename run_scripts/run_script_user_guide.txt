@@ -299,17 +299,15 @@ STEP 5 - Finish NGCA
 	
 
 =========
-JADJ QAQC - Windows Version (a temporary solution)
+JADJ QAQC - Linux Version (a temporary solution)
 =========
 
 Schedule: 	Run JADJ QA/QC when/if a jurisdiction supplies it between NGCA and next NADJ.
-Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solved). 
+Machines: 	NADJ Linux 
 
 + This section covers the checks done on the JADJ. 
 + It is to be done for only those jurisdictions that submit a JADJ. 
 + It occurs between NGCA and the NADJ. 
-+ It is for the Windows machine (NADJ Windows), a temporary solution whilst it 
-  is investigated how to run the national adjustment on Linux again.
 + The JADJ QA/QC refers to these steps:
 	1. Duplicate station check.
 	2. Near station check.
@@ -325,25 +323,23 @@ Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solv
 - Action: Need to review JADJ QA/QC
 + Steps in AWS console to connect to Windows machine: 
 
-	> Systems Manager > Fleet Manager > Node Actions > Connect > Connect with Remote Desktop > Key pair
-
-	# On NADJ Windows machine: 
+	# On NADJ Windows Linux: 
 
 	+ Download the jurisdictional adjustment data:
 
-		>>> cd \Data
+		>>> cd \data
 		>>> aws s3 cp s3://gda2020-ngca/adjustmentData/ stn/ --recursive --exclude "*" --include "[JUR]*.adj.xml"
 		>>> aws s3 cp s3://gda2020-ngca/adjustmentData/ msr/ --recursive --exclude "*" --include "[JUR]*_msr.xml"
 
-	+ Move the old files to the staging area:
+	+ Move the old files to the archive:
 
 		>>> cd stn
 		>>> dir
-		>>> move [JUR]_GDA2020_YYYYMMDD.adj.xml staging 
+		>>> move [JUR]_GDA2020_YYYYMMDD.adj.xml archive 
 
 		>>> cd ..\msr
 		>>> dir
-		>>> move [JUR]_GDA2020_YYYYMMDD_msr.xml staging
+		>>> move [JUR]_GDA2020_YYYYMMDD_msr.xml archive
 		>>> cd ..
 
 	+ Download auxiliary files:
@@ -352,7 +348,7 @@ Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solv
 		>>> aws s3 cp s3://gda2020-ngca/files/ renaming/ --recursive --exclude "*" --include "[jur]*.ignore"
 		>>> aws s3 cp s3://gda2020-ngca/files/ nearStns/ --recursive --exclude "*" --include "[jur]*.near"
 	
-		NOTE: Move the old versions of these files into the staging folder of each respective directory (renaming, nearStns)
+		NOTE: Move the old versions of these files into the archive folder of each respective directory (renaming, nearStns)
                       if they exist. 
 	
 	+ Run the duplicate station search:
