@@ -354,7 +354,6 @@ Machines: 	NADJ Linux
 	+ Run the duplicate station search:
 
 		>>> python runNatAdjust.py -s dup
-		>>> perl checkDST.pl
 
 		NOTE: - Check the .dup file for identified duplicates, i.e. '>>> type gda2020_YYYYMMDD.dup.dup'.
 		      - Notify jurisdictions involved to fix/clarify respective duplicates.
