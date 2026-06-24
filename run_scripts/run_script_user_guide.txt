@@ -321,24 +321,64 @@ Machines: 	NADJ Linux
   sigma-0 threshold. I have not done tests to identify what threshold for a single-iteration 
   sigma-0 value would make sense.
 - Action: Need to review JADJ QA/QC
-+ Steps in AWS console to connect to Windows machine: 
++ Set up NADJ_Linux Machine:
 
-	# On NADJ Windows Linux: 
+	+ Create tmp volume:
+
+		Create volume on AWS at EC2 > Volumes > Create Volume
+
+		Use the following settings
+		1. Volume type: gp3
+		2. Size: 1000 GiB
+		3. IOPS: 3000
+		4. Throughput: 600 MiB/s
+
+	+ Attach volume to instances
+
+		Find volume in list and name it. 
+		Select volume in list go to actions>Attach Volume.
+		Select the NADJ_Linux volume to attach.
+
+	+ Mount Volume
+
+		On the NADJ_Linux machine list all attached drives
+
+		>>> lsblk
+
+		Will likely see something like this:
+
+		NAME         MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+		loop0          7:0    0 28.2M  1 loop /snap/amazon-ssm-agent/13009
+		loop1          7:1    0   74M  1 loop /snap/core22/2411
+		loop2          7:2    0 49.3M  1 loop /snap/snapd/26865
+		nvme0n1      259:0    0  100G  0 disk 
+		├─nvme0n1p1  259:1    0   99G  0 part /
+		├─nvme0n1p14 259:2    0    4M  0 part 
+		├─nvme0n1p15 259:3    0  106M  0 part /boot/efi
+		└─nvme0n1p16 259:4    0  913M  0 part /boot
+	    nvme1n1      260:0    0 1000G  0 disk
+
+		The last line here is the added volume as it has the correct size and currently has no mount points.
+		Run the following script to attach the volume, using the location of the volume as the argument.
+
+		>>> ./format_and_mount.sh /dev/nvme1n1
+
++ On NADJ_Linux Machine:
 
 	+ Download the jurisdictional adjustment data:
 
-		>>> cd \data
+		>>> cd data
 		>>> aws s3 cp s3://gda2020-ngca/adjustmentData/ stn/ --recursive --exclude "*" --include "[JUR]*.adj.xml"
 		>>> aws s3 cp s3://gda2020-ngca/adjustmentData/ msr/ --recursive --exclude "*" --include "[JUR]*_msr.xml"
 
 	+ Move the old files to the archive:
 
 		>>> cd stn
-		>>> dir
+		>>> ls
 		>>> move [JUR]_GDA2020_YYYYMMDD.adj.xml archive 
 
-		>>> cd ..\msr
-		>>> dir
+		>>> cd ../msr
+		>>> ls
 		>>> move [JUR]_GDA2020_YYYYMMDD_msr.xml archive
 		>>> cd ..
 
@@ -351,30 +391,16 @@ Machines: 	NADJ Linux
 		NOTE: Move the old versions of these files into the archive folder of each respective directory (renaming, nearStns)
                       if they exist. 
 	
-	+ Run the duplicate station search:
+	+ Run QAQC searchs:
 
-		>>> python runNatAdjust.py -s dup
+		>>> python3 runNatAdjust.py -s both
 
-		NOTE: - Check the .dup file for identified duplicates, i.e. '>>> type gda2020_YYYYMMDD.dup.dup'.
-		      - Notify jurisdictions involved to fix/clarify respective duplicates.
+		NOTE: - Check the .dup file for identified duplicates, i.e. '>>> cat gda2020_YYYYMMDD.dup'.
+		      - Check the .dst file for identified near stations, i.e. '>>> type gda2020_YYYYMMDD.near.dst'.
+			  - Notify jurisdictions involved to fix any issues
 		      	* I have not been enforcing this lately due to development in this process.
 
-		>>> del gda2020_YYYYMMDD.dup*
-
-	+ Run the near station search:
-
-		>>> python runNatAdjust.py -s near
-		>>> move gda2020_YYYYMMDD.near.dst nearStns
-		>>> del gda2020_YYYYMMDD.near.bat
-		>>> cd nearStns
-		>>> perl filterNearStns.pl 
-
-		NOTE: - Check the .dst file for identified near stations, i.e. '>>> type gda2020_YYYYMMDD.near.dst'.
-		      - Notify jurisdictions involved to fix/clarify respective near stations.
-			* I have not been enforcing this lately due to development in this process.
-
-		>>> del gda2020* notUsedIgnore.dat
-		>>> cd ..\
+		>>> rm gda2020*
 
 	+ Temporary Step:
 
@@ -387,9 +413,9 @@ Machines: 	NADJ Linux
 						267300640
 						313200220
 						
-	+ Run the 1-iteration adjustment (~9hrs):
+	+ Run the 1-iteration adjustment (~3hrs):
 
-		>>> python runNatAdjust.py -qa
+		>>> nohup python3 runNatAdjust.py -qa & > logs/[JUR]_qa_YYYMMDD.out
 
 		NOTE: - Investigate the sigma-0 and maximum correction value to identify potential issues. 
 		      - Large corrections or sigma-0 values do not necessarily mean the JADJ needs to be rejected. 
@@ -398,8 +424,8 @@ Machines: 	NADJ Linux
 
 	+ Move the output files to a temporary folder (JADJ-RESULTS):
 
-		>>> move gda2020_YYYYMMDD.phased-stage.adj JADJ-RESULTS\[JUR]_gda2020_YYYYMMDD.phased-stage.adj
-		>>> move gda2020_YYYYMMDD.phased-stage.adj.stn.xml JADJ-RESULTS\[JUR]_gda2020_YYYYMMDD.phased-stage.adj.stn.xml
+		>>> mv gda2020_YYYYMMDD.phased-stage.adj JADJ-RESULTS/[NADJ_DATE]/[JUR]_gda2020_YYYYMMDD.phased-stage.adj
+		>>> mv gda2020_YYYYMMDD.phased-stage.adj.stn.xml JADJ-RESULTS/[NADJ_DATE]/[JUR]_gda2020_YYYYMMDD.phased-stage.adj.stn.xml
 
 		NOTE: - Whichever JADJ was processed last, and successfully, it can be used to update the a priori coordinate file 
                         for the national adjustment. 
@@ -407,7 +433,7 @@ Machines: 	NADJ Linux
 		      - This will save an iteration in the national adjustment. 
 		      - If this is the case, run this command:
 
-			>>> copy JADJ-RESULT\[JUR]_gda2020_YYYYMMDD.phased-stage.adj.stn.xml apriori.xml
+			>>> cp JADJ-RESULT/[NADJ_DATE]/[JUR]_gda2020_YYYYMMDD.phased-stage.adj.stn.xml apriori.xml
 
 
 
@@ -416,92 +442,118 @@ NADJ PROCESSING - !NEED TO UPDATE THIS! | !IN DEVELOPMENT!
 ===============
 
 Schedule: 	Run NADJ on 1st of every 2nd month.
-Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solved). 
+Machines: 	NADJ Linux
 
 + This section covers the steps to run a national adjustment.
-+ It is for the Windows machine (NADJ Windows), a temporary solution whilst it 
-  is investigated how to run the national adjustment on Linux again.
 + The NADJ processing refers to these steps:
 	1. A final duplicate station search (only to keep the output files for posterity).
 	2. A final near station search (only to keep the output files for posterity). 
 	3. National adjustment. 
 	4. Add Type-B uncertainties. 
 	5. Package up files to upload to s3.
-+ Steps in AWS console to connect to Windows machine: 
++ Set up NADJ_Linux Machine:
 
-	> Systems Manager > Fleet Manager > Node Actions > Connect > Connect with Remote Desktop > Key pair
+	+ Create tmp volume:
 
-	# On NADJ Machine:
+		Create volume on AWS at EC2 > Volumes > Create Volume
 
-	+ Open the command prompt, move to working directory:
+		Use the following settings
+		1. Volume type: gp3
+		2. Size: 1000 GiB
+		3. IOPS: 3000
+		4. Throughput: 600 MiB/s
 
-		>>> cd \Data
+	+ Attach volume to instances
 
-	+ Run the duplicate station search:
+		Find volume in list and name it. 
+		Select volume in list go to actions>Attach Volume.
+		Select the NADJ_Linux volume to attach.
 
-		>>> python runNatAdjust.py -s dup
-		>>> perl checkDST.pl
-		>>> move gda2020_YYYYMMDD.dup.dup searches\
-		>>> del gda2020_YYYYMMDD.dup*
-	
-	+ Run the near station search:
+	+ Mount Volume
 
-		>>> python runNatAdjust.py -s near
-		>>> move gda2020_YYYYMMDD.near.dst nearStns
-		>>> del gda2020_YYYYMMDD.near.bat
-		>>> cd nearStns
-		>>> perl filterNearStns.pl
-		>>> move gda2020_YYYYMMDD.near.dst ..\searches
-		>>> del gda2020_YYYYMMDD.near.dst.bak notUsedIgnore.dat
-		>>> cd ..
+		On the NADJ_Linux machine list all attached drives
 
-	+ Run the national adjustment (~9.5 hours/iteration)
+		>>> lsblk
 
-		>>> python runNatAdjust.py
+		Will likely see something like this:
 
-		NOTE: - Usually 2-3 iterations (~20-30 total hours of processing time). 
+		NAME         MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+		loop0          7:0    0 28.2M  1 loop /snap/amazon-ssm-agent/13009
+		loop1          7:1    0   74M  1 loop /snap/core22/2411
+		loop2          7:2    0 49.3M  1 loop /snap/snapd/26865
+		nvme0n1      259:0    0  100G  0 disk 
+		├─nvme0n1p1  259:1    0   99G  0 part /
+		├─nvme0n1p14 259:2    0    4M  0 part 
+		├─nvme0n1p15 259:3    0  106M  0 part /boot/efi
+		└─nvme0n1p16 259:4    0  913M  0 part /boot
+	    nvme1n1      260:0    0 1000G  0 disk
+
+		The last line here is the added volume as it has the correct size and currently has no mount points.
+		Run the following script to attach the volume, using the location of the volume as the argument.
+
+		>>> ./format_and_mount.sh /dev/nvme1n1
+
++ On NADJ_Linux Machine:
+
+	+ Move to working directory:
+
+		>>> cd data
+
+	+ Run the QAQC searchs:
+
+		>>> python3 runNatAdjust.py -s both
+		>>> mv gda2020_YYYYMMDD.dup searches/
+		>>> mv gda2020_YYYYMMDD.dst searches/
+		>>> rm gda2020*
+
+	+ Run the national adjustment (~3.5 hours/iteration)
+
+		>>> nohup python3 runNatAdjust.py & > logs/NADJ_YYYYMMDD.out
+
+		NOTE: - Usually 3-4 iterations (~10-14 total hours of processing time). 
 		      - When finished, run the next steps for organising files and post-processing. 
 
 	+ Add Type-B uncertainties to the adjusted coordinates
 
-		>>> copy addTypeB.py adjustments\gda2020_YYYYMMDD
-		>>> cd adjustments\gda2020_YYYYMMDD
-		>>> python addTypeB.py
-		>>> del addTypeB.py
+		>>> cp addTypeB.py adjustments/gda2020_YYYYMMDD
+		>>> cd adjustments/gda2020_YYYYMMDD
+		>>> python3 addTypeB.py
+		>>> rm addTypeB.py
 		>>> cd ..
-		>>> mkdir sent\gda2020_YYYYMMDD
-		>>> copy gda2020_YYYYMMDD\* sent\gda2020_YYYYMMDD
+		>>> mkdir sent/gda2020_YYYYMMDD
+		>>> cp gda2020_YYYYMMDD/* sent/gda2020_YYYYMMDD
 		>>> cd ..
 
 	+ Create adjustment comparison
 		NOTE: -If the NADJ date was not renamed, the PREVIOUS_start and PREVIOUS_end will be the same date, this is not always the case prior to 2025.
 			  -Dynadiff order: Previous NADJ first, then Newest NADJ second.
 
-		>>> copy dynaDiff.py adjustments\sent\gda2020_YYYYMMDD
-		>>> copy big_ntstats.py adjustments\sent\gda2020_YYYYMMDD
-		>>> cd adjustments\sent\gda2020_YYYYMMDD
-		>>> copy ..\gda2020_[PREVIOUS_start]\gda2020_[PREVIOUS_end].phased-stage.xyz .\
-		>>> python dynaDiff.py gda2020_PREVDATE.phased-stage.xyz gda2020_YYYYMMDD.phased-stage.xyz
-		>>> del *.sh *.asl *.aml *.d *.dbid *.dnaproj *.map *.data *.rft *.seg
+		>>> cp dynaDiff.py adjustments/sent/gda2020_YYYYMMDD
+		>>> cp big_ntstats.py adjustments/sent/gda2020_YYYYMMDD
+		>>> cd adjustments/sent/gda2020_YYYYMMDD
+		>>> copy ../gda2020_[PREVIOUS_start]/gda2020_[PREVIOUS_end].phased-stage.xyz .
+		>>> python3 dynaDiff.py gda2020_PREVDATE.phased-stage.xyz gda2020_YYYYMMDD.phased-stage.xyz
+		>>> rm *.sh *.asl *.aml *.d *.dbid *.dnaproj *.map *.data *.rft *.seg
     + creates a .csv file
 		
 	+ Identify largest N-statistics
 
-		>>> python big_nstats.py gda2020_YYYYMMDD.phased-stage.adj
-		>>> del big_nstats.py dynaDiff.py
+		>>> python3 big_nstats.py gda2020_YYYYMMDD.phased-stage.adj
+		>>> rm big_nstats.py dynaDiff.py
 
 	+ Prepare folder
 
 		>>> mkdir inputFiles
-		>>> cd ..\..\..\
-		>>> copy AUSGeoid2020_20180201.gsb adjustments\sent\gda2020_YYYYMMDD\inputFiles
-		>>> copy DynaMl.xsd adjustments\sent\gda2020_YYYYMMDD\inputFiles
-		>>> copy aprefYYYMMDD* adjustments\sent\gda2020_YYYYMMDD\inputFiles
-		>>> copy disconts*.snx adjustments\sent\gda2020_YYYYMMDD\inputFiles
-		>>> copy stn\*.xml adjustments\sent\gda2020_YYYYMMDD\inputFiles
-		>>> copy msr\*.xml adjustments\sent\gda2020_YYYYMMDD\inputFiles
+		>>> cd ../../../
+		>>> cp AUSGeoid2020_20180201.gsb adjustments/sent/gda2020_YYYYMMDD/inputFiles
+		>>> cp DynaMl.xsd adjustments/sent/gda2020_YYYYMMDD/inputFiles
+		>>> cp -r aprefYYYMMDD/ adjustments/sent/gda2020_YYYYMMDD/inputFiles
+		>>> cp disconts*.snx adjustments/sent/gda2020_YYYYMMDD/inputFiles
+		>>> cp stn/*.xml adjustments/sent/gda2020_YYYYMMDD/inputFiles
+		>>> cp msr/*.xml adjustments/sent/gda2020_YYYYMMDD/inputFiles
 		>>> cd adjustments\sent
 		>>> tar -a -c -f gda2020_YYYYMMDD.zip gda2020_YYYYMMDD
+		>>> rm -r gda2020_YYYYMMDD
 
 	+ Upload to s3
 
@@ -514,4 +566,3 @@ Machines: 	NADJ Windows (National Geodesy) / NADJ Linux (when NADJ issue is solv
 
 	
 --- END OF DOCUMENT ---
-
