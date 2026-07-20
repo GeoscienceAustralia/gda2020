@@ -1066,10 +1066,16 @@ make_map(df_all_estimates)
 
 print("8. Generating PDF report...")
 
+author_name = False
+
+if not author_name:
+    print("   Author name not set, using default 'National Geodesy Team'")
+    author_name = "National Geodesy Team"
+
 html = template.render(
     old_apref=old_apref_name,
     new_apref=new_apref_name,
-    author="Kyran Cook",
+    author=author_name,
     section="National Geodesy",
     generated_date=date.today().strftime("%d %B %Y"),
     abstract="This report compares APREF 2026.05 against APREF 2026.04...",
