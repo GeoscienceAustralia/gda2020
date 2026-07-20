@@ -361,7 +361,7 @@ Machines: 	NADJ Linux
 		The last line here is the added volume as it has the correct size and currently has no mount points.
 		Run the following script to attach the volume, using the location of the volume as the argument.
 
-		>>> ./format_and_mount.sh /dev/nvme1n1
+		>>> sudo ./format_and_mount.sh /dev/nvme1n1
 
 + On NADJ_Linux Machine:
 
@@ -375,11 +375,11 @@ Machines: 	NADJ Linux
 
 		>>> cd stn
 		>>> ls
-		>>> move [JUR]_GDA2020_YYYYMMDD.adj.xml archive 
+		>>> mv [JUR]_GDA2020_YYYYMMDD.adj.xml archive 
 
 		>>> cd ../msr
 		>>> ls
-		>>> move [JUR]_GDA2020_YYYYMMDD_msr.xml archive
+		>>> mv [JUR]_GDA2020_YYYYMMDD_msr.xml archive
 		>>> cd ..
 
 	+ Download auxiliary files:
