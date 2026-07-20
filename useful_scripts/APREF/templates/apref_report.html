@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>APREF Realisation Comparison</title>
+
+  <style>
+    @page {
+      size: A4;
+      margin: 5mm 12mm 10mm 12mm;
+  
+
+      @bottom-left {
+        content: "APREF Comparison";
+        border-top: 2px solid #00718b;
+        font-size: 6pt;
+        width: 100%;
+        margin-top: 0mm;
+      }
+
+      @bottom-right {
+        content: counter(page);
+        font-size: 6pt;
+        padding-right: 10mm;
+        margin-top: 0mm;
+      }
+    
+    }
+    
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      color: #1f2933;
+      font-size: 10.5pt;
+      line-height: 1.45;
+    }
+
+    .cover-header {
+      background: #00718b;
+      color: white;
+      padding: 7mm 20mm 5mm 20mm;
+      margin: -10mm -15mm 12mm -15mm;
+    }
+
+    .agency-logo {
+      width: 40mm;
+      height: auto;
+      display: block;
+      margin-bottom: 1mm;
+    }
+
+    .title {
+      font-size: 30pt;
+      font-weight: bold;
+      margin-bottom: 4mm;
+    }
+
+    .subtitle {
+      font-size: 14pt;
+    }
+
+    .author-bar {
+      background: #e6eef0;
+      color: #102a43;
+      padding: 2mm 18mm;
+      margin: -12mm -15mm 5mm -15mm;
+      font-size: 7pt;
+    }
+
+    h1 {
+      color: #005f6b;
+      border-bottom: 2px solid #00718b;
+      padding-bottom: 1mm;
+      margin-top: 5mm;
+    }
+
+    h2 {
+      color: #005f6b;
+      margin-top: 4mm;
+    }
+
+    .abstract {
+      background: #f2f7f8;
+      border-left: 5px solid #00718b;
+      padding: 5mm;
+      margin: 8mm 0;
+      font-size: 9pt;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4mm;
+      margin: 8mm 0;
+    }
+
+    .metric-card {
+      border: 1px solid #c7d7dc;
+      border-top: 5px solid #00718b;
+      padding: 5mm;
+      background: #ffffff;
+    }
+
+    .metric-label {
+      font-size: 8.5pt;
+      color: #52616b;
+    }
+
+    .metric-value {
+      font-size: 20pt;
+      font-weight: bold;
+      color: #102a43;
+    }
+
+    .metric-diff-positive {
+      color: #168a42;
+      font-weight: bold;
+    }
+
+    .metric-diff-negative {
+      color: #b42318;
+      font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 5mm 0 8mm 0;
+      font-size: 9pt;
+    }
+
+    th {
+      background: #00718b;
+      color: white;
+      text-align: left;
+      padding: 2.5mm;
+    }
+
+    td {
+      border-bottom: 1px solid #d9e2e7;
+      padding: 2.3mm;
+    }
+
+    tr:nth-child(even) {
+      background: #f7fafb;
+    }
+
+    .map {
+      width: 100%;
+      margin-top: 0mm;
+      margin-bottom: 0mm;
+    }
+
+    .note {
+      font-size: 8.5pt;
+      color: #52616b;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+
+    .abstract-heading {
+      margin-top: 0mm;
+    }
+    
+    .no-change-box {
+      background: #f2f7f8;
+      border-left: 5px solid #00788a;
+      padding: 4mm 5mm;
+      margin: 5mm 0 8mm 0;
+      color: #102a43;
+      font-weight: bold;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <div class="cover-header">
+    <img class="agency-logo" src="/home/ubuntu/apref/templates/GA_logo.PNG" alt="Australian Government Geoscience Australia logo">
+    <div class="title">APREF Comparison</div>
+    <div class="subtitle">{{ old_apref }} vs {{ new_apref }}</div>
+  </div>
+
+  <div class="author-bar">
+    <strong>{{ author }}</strong> | {{ section }} | Generated {{ generated_date }}
+  </div>
+
+  <h1 class="abstract-heading">Abstract</h1>
+  <div class="abstract">
+    This report compares {{ new_apref}} against {{ old_apref }}. It provides an overview of changes, including added and removed stations, new discontinuities, changed discontinuities, and stations with movement greater than 10 mm.
+  </div>
+
+  <h1>1. Overview</h1>
+
+  <div class="summary-grid">
+    <div class="metric-card">
+      <div class="metric-label">Total stations</div>
+      <div class="metric-value">{{ total_new }}</div>
+      <div class="metric-label">Old: {{ total_old }} | Diff: <span class="metric-diff-{{ total_diff_class }}">{{ total_diff }}</span></div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">GDA2020 area</div>
+      <div class="metric-value">{{ gda2020_new }}</div>
+      <div class="metric-label">Old: {{ gda2020_old }} | Diff: <span class="metric-diff-{{ gda2020_diff_class }}">{{ gda2020_diff }}</span></div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Constraining (>2 years)</div>
+      <div class="metric-value">{{ constraining_new }}</div>
+      <div class="metric-label">Old: {{ constraining_old }} | Diff: <span class="metric-diff-{{ constraining_diff_class }}">{{ constraining_diff }}</span></div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Moved > 10 mm</div>
+      <div class="metric-value">{{ moved_gt_10mm_count }}</div>
+      <div class="metric-label">Largest: {{ largest_2d_moved }} @ {{ largest_movement_site }}</div>
+    </div>
+  </div>
+
+  <h1>2. APREF Station Map</h1>
+  <img class="map" src="{{ apref_map_path }}" >
+  <div class="page-break"></div>
+
+  <h1>3. Added Stations</h1>
+
+  {% if added_stations_count > 0 %}
+    <p>
+      A total of <strong>{{ added_stations_count }}</strong> stations were added as a constraint to {{ new_apref }} (> 2 years old)
+    </p>
+
+    {{ added_stations_table }}
+
+  {% else %}
+    <div class="no-change-box">
+      No stations were added as a constraint to {{ new_apref }} (> 2 years old). 
+    </div>
+  {% endif %}
+
+  <h1>4. Removed Stations</h1>
+
+    {% if removed_stations_count > 0 %}
+    <p>
+      A total of <strong>{{ removed_stations_count }}</strong> stations were removed as a constraint to {{ new_apref }}.
+    </p>
+
+    {{ removed_stations_table }}
+
+  {% else %}
+    <div class="no-change-box">
+      No stations were removed as a constraint to {{ new_apref }}.
+    </div>
+  {% endif %}
+
+  <h1>5. Stations Moved by More Than 10 mm</h1>
+  
+  {% if moved_stations_count > 0 %}
+    <p>
+      A total of <strong>{{ moved_stations_count }}</strong> stations moved by more then 10 mm in {{ new_apref }}.
+    </p>
+
+    {{ moved_stations_table }}
+
+  {% else %}
+    <div class="no-change-box">
+      No stations moved by more then 10 mm in {{ new_apref }}.
+    </div>
+  {% endif %}
+
+  <h1>6. New Discontinuities</h1>
+  
+  {% if new_discontinuities_count > 0 %}
+    <p>
+      A total of <strong>{{ new_discontinuities_count }}</strong> new discontinuities were added to {{ new_apref }}.
+    </p>
+
+    {{ new_discontinuities_table }}
+
+  {% else %}
+    <div class="no-change-box">
+      No new discontinuities were added to {{ new_apref }}.
+    </div>
+  {% endif %}
+  
+
+  <h1>7. Changed Discontinuities</h1>
+  
+  {% if changed_discontinuities_count > 0 %}
+    <p>
+      A total of <strong>{{ changed_discontinuities_count }}</strong> discontinuities changed in {{ new_apref }}.
+    </p>
+
+    {{ changed_discontinuities_table }}
+
+  {% else %}
+    <div class="no-change-box">
+      There were no changes to discontinuities in {{ new_apref }}.
+    </div>
+  {% endif %}
+  
+
+</body>
+</html>
