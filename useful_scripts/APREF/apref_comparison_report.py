@@ -1078,7 +1078,6 @@ html = template.render(
     author=author_name,
     section="National Geodesy",
     generated_date=date.today().strftime("%d %B %Y"),
-    abstract="This report compares APREF 2026.05 against APREF 2026.04...",
     total_old=len(old_full_sol_sites),
     total_new=len(new_full_sol_sites),
     total_diff=total_diff_sign,
