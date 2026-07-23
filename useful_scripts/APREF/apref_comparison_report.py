@@ -11,10 +11,8 @@ import math
 import re
 import argparse
 
-# For map
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
+from apref_comparison_qaqc import check_solutions, check_disconts, check_epochs
+from apref_comparison_map import make_map
 
 """
 This script will create a transition report between different apref versions. 
@@ -185,99 +183,6 @@ def diff_sign_adder(diff):
     else:
         return str(diff), ""
 
-def make_map(df):
-    """
-    Generate a map of Asutralia showing Apref stations, highlighting stations with changes.
-
-    :param df: pandas.DataFrame containing station information with columns 'lon', 'lat', and 'Category'.
-    :return: None. Saves map as 'apref_station_map.png'.
-    """
-
-    data_crs = ccrs.PlateCarree()
-
-    fig = plt.figure(figsize=(10, 7))
-    ax = plt.axes(projection=data_crs)
-
-    # Extent for GDA2020
-    ax.set_extent([99, 166, -44.5, -8], crs=data_crs)
-
-    # Base map styling based on GA guide colours
-    ocean_colour = (190/255, 232/255, 255/255)    # Ocean
-    land_colour = (255/255, 218/255, 181/255)     # Landmass
-    coast_colour = (0/255, 54/255, 255/255)       # Coastline
-    state_colour = (78/255, 78/255, 78/255)       # State borders
-
-    # Add basic features to map
-    ax.set_facecolor(ocean_colour)
-
-    ax.add_feature(cfeature.LAND, facecolor=land_colour, edgecolor="none", zorder=0)
-    ax.add_feature(cfeature.OCEAN, facecolor=ocean_colour, edgecolor="none", zorder=0)
-    ax.coastlines(resolution="10m", color=coast_colour, linewidth=0.6, zorder=3)
-    ax.add_feature(cfeature.STATES, edgecolor=state_colour, linewidth=0.75, linestyle="-", facecolor="none", zorder=2)
-
-    # Define styles for different categories of stations
-    styles = {
-        "Existing Station": {
-            "marker": "o",
-            "s": 6,
-            "facecolor": "#434643",
-            "edgecolor": "0.45",
-            "linewidth": 0.4,
-            "zorder": 3
-        },
-        "New Station": {
-            "marker": "o",
-            "s": 36,
-            "facecolor": "#05B632",
-            "edgecolor": "black",
-            "linewidth": 0.4,
-            "zorder": 5
-        },
-        "New Discontinuity": {
-            "marker": "o",
-            "s": 45,
-            "facecolor": "#0077E6",
-            "edgecolor": "black",
-            "linewidth": 0.4,
-            "zorder": 6
-        },
-        "Moved > 10 mm": {
-            "marker": "o",
-            "s": 42,
-            "facecolor": "#D55E00",
-            "edgecolor": "black",
-            "linewidth": 0.4,
-            "zorder": 7
-        },
-        "Removed Station": {
-            "marker": "x",
-            "s": 42,
-            "facecolor": "#EE0B0B",
-            "linewidth": 2,
-            "zorder": 7
-        }
-    }
-
-    # Plot stations on map based on category
-    for category, style in styles.items():
-        sub = df[df["Category"] == category]
-
-        ax.scatter(
-            sub["lon"],
-            sub["lat"],
-            transform=data_crs,
-            label=category,
-            **style
-        )
-
-    # Clean legend (avoid duplicates)
-    handles, labels = ax.get_legend_handles_labels()
-    by_label = dict(zip(labels, handles))
-    plt.legend(by_label.values(), by_label.keys(), loc="lower left")
-
-    plt.tight_layout()
-    plt.savefig("apref_station_map.png", dpi=300, bbox_inches="tight")
-
 
 #------ Setup ------#
 
@@ -408,12 +313,11 @@ new_con_sol_sites = gnss.read_sinex_sites(new_con_sol)
 
 #------ Integrity Checks ------#
 
-# 4 checks to be completed to ensure the integrity of the sinex file.
+# 3 checks to be completed to ensure the integrity of the sinex file.
 
 # 1. Check for duplicate solutions and that all solutions are present (ie if solution 1 and 3 are present, solution 2 should also be present)
 # 2. Check that all disconts in the sinex file are in the disconts file
 # 3. Check epochs format
-# 4. Read files into dynadjust
 
 print("2. Performing checks on sinex files...")
 
@@ -421,158 +325,26 @@ print("2. Performing checks on sinex files...")
 con_estimates_check = gnss.read_sinex_estimate(new_con_sol)
 noncon_estimates_check = gnss.read_sinex_estimate(new_noncon_sol)
 
-estimate_cols = [
-    "Site",
-    "Solution",
-    "refEpoch",
-    "staX",
-    "staY",
-    "staZ",
-    "staX_sd",
-    "staY_sd",
-    "staZ_sd",
-]
-
-vel_cols = ["velX", "velY", "velZ", "velX_sd", "velY_sd", "velZ_sd"]
-
-df_con_estimates = pd.DataFrame(con_estimates_check, columns=estimate_cols)
-
-# Have to add velocity columns to read in data frame then remove columns
-for col in vel_cols:
-    estimate_cols.append(col)
-df_noncon_estimates_check = pd.DataFrame(noncon_estimates_check, columns=estimate_cols)
-df_noncon_estimates_check = df_noncon_estimates_check.drop(columns=vel_cols)
-
-for col in vel_cols:
-    estimate_cols.remove(col)
-
-df_all_estimates_check = pd.concat([df_con_estimates, df_noncon_estimates_check], ignore_index=True)
-
-# Check for duplicates, remove 21NA and KALG as they are duped on purpose
-duplicates = df_all_estimates_check[df_all_estimates_check.duplicated(subset=["Site", "Solution"], keep=False)].query("Site not in ['ALIC', 'MOBS']").sort_values(by=["Site", "Solution"])
-
-missing_solutions = {}
-
-for site, group in df_all_estimates_check.groupby("Site"):
-    sols = sorted(group["Solution"].unique().astype(int))
-
-    expected = set(range(min(sols), max(sols) + 1))
-    missing = sorted(expected - set(sols))
-
-    if missing:
-        missing_solutions[site] = missing
-
-if len(duplicates) > 0:
-    print("  2.1 Duplicates solutions found:")
-    print(duplicates)
-else:
-    print("  2.1 No duplicate solutions found")
-if len(missing_solutions) > 0:
-    print("  2.2 Missing solutions found:")
-    for site, solutions in missing_solutions.items():
-        print(f"    {site}: {solutions}")
-else:
-    print("  2.2 No missing solutions found")
+check_solutions(con_estimates_check, noncon_estimates_check)
 
 del con_estimates_check
 del noncon_estimates_check
-del df_all_estimates_check
 
 # 2. Check disconts
 
 # Read in discontinuty file and solutions in gda2020 area
 new_dis_seperate = gnss.read_disconts(new_dis)
-new_aus_sol_estimate = gnss.read_solution_epochs(new_aus_sol)
+new_aus_sol_estimates = gnss.read_solution_epochs(new_aus_sol)
 
-dis_cols = [
-    "Site",
-    "Code1",
-    "Solution",
-    "Code2",
-    "start_epoch",
-    "end_epoch",
-    "Type",
-]
-
-df_new_dis_seperate = pd.DataFrame(new_dis_seperate, columns=dis_cols)
-df_new_aus_sol_estimates = pd.DataFrame(new_aus_sol_estimate, columns=["Site","Point","Solution","obs","start","end","mean"])
-
-# Remove V type disconts
-df_new_dis_seperate = df_new_dis_seperate[df_new_dis_seperate["Type"] == "P"]
-
-# Make list of stations that have multiple solutions (as single solutions sites not in discont file)
-solution_counts = (df_new_aus_sol_estimates.groupby("Site")["Solution"].nunique())
-multi_solution_sites = solution_counts[solution_counts > 1].index
-
-# Create new df of just these sites
-sites_to_check = df_new_aus_sol_estimates[df_new_aus_sol_estimates["Site"].isin(multi_solution_sites)]
-
-# Create sets of both
-disc_pairs = set(zip(df_new_dis_seperate["Site"], df_new_dis_seperate["Solution"]))
-site_pairs = set(zip(sites_to_check["Site"], sites_to_check["Solution"]))
-
-# Find solutions not in discont file
-missing = site_pairs - disc_pairs
-
-if len(missing) > 0:
-    print("  2.3 Found discontinuities not in discont file")
-    for site, point in sorted(missing):
-        print(f"    Site: {site} Point: {point}")
-else:
-    print("  2.3 No discontinuities are missing from discont file")
+check_disconts(new_dis_seperate, new_aus_sol_estimates)
 
 del new_dis_seperate
-del new_aus_sol_estimate
-del sites_to_check
-del disc_pairs
-del site_pairs
 
 # 3. Check domes format and duplicate domes
 
-epoch_cols = ["start", "end", "mean"]
+check_epochs(new_aus_sol_estimates)
 
-epoch_pattern = re.compile(r"^\d{2}:\d{3}:\d{5}$")
-
-bad_epochs = []
-
-for _, row in df_new_aus_sol_estimates.iterrows():
-    for col in epoch_cols:
-        epoch = str(row[col]).strip()
-
-        problem = None
-
-        # Check format
-        if not epoch_pattern.match(epoch):
-            problem = "Invalid format"
-
-        else:
-            yy, doy, sec = epoch.split(":")
-            doy = int(doy)
-            sec = int(sec)
-
-            if not (1 <= doy <= 366):
-                problem = f"Invalid DOY ({doy})"
-
-            elif not (0 <= sec <= 86399):
-                problem = f"Invalid seconds ({sec})"
-
-        if problem:
-            bad_epochs.append({
-                "Site": row["Site"],
-                "Solution": row["Solution"],
-                "Column": col,
-                "Epoch": epoch,
-                "Problem": problem
-            })
-
-df_bad_epochs = pd.DataFrame(bad_epochs)
-
-if len(df_bad_epochs) > 0:
-    print("  2.4 Found incorrect epochs:")
-    for _, row in df_bad_epochs.iterrows():
-        print(f"    Site: {row['Site']}  Epoch: {row['Epoch']}  Problem: {row['Problem']}")
-else:
-    print("  2.4 No incorrect epochs found")
+del new_aus_sol_estimates
 
 #------ Overview ------#
 
@@ -868,6 +640,18 @@ print("6. Finding moved stations...")
 old_site_estimate = gnss.read_sinex_estimate(old_con_sol)
 new_site_estimate = gnss.read_sinex_estimate(new_con_sol)
 
+estimate_cols = [
+    "Site",
+    "Solution",
+    "refEpoch",
+    "staX",
+    "staY",
+    "staZ",
+    "staX_sd",
+    "staY_sd",
+    "staZ_sd",
+]
+
 # Create df
 old_site_estimate_df = pd.DataFrame(old_site_estimate, columns=estimate_cols)
 new_site_estimate_df = pd.DataFrame(new_site_estimate, columns=estimate_cols)
@@ -1066,10 +850,10 @@ make_map(df_all_estimates)
 
 print("8. Generating PDF report...")
 
-author_name = False
+author_name = "Kyran Cook"
 
 if not author_name:
-    print("   Author name not set, using default 'National Geodesy Team'")
+    print("Author name not set, using default 'National Geodesy Team'")
     author_name = "National Geodesy Team"
 
 html = template.render(
