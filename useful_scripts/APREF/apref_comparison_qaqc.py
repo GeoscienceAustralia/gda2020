@@ -1,10 +1,14 @@
 import pandas as pd
 import re
+import numpy as np
 
-# Complete three checks
+from geodepy import convert as convert
+
+# Complete four checks
 # 1. Check for duplicate solutions and that all solutions are present (ie if solution 1 and 3 are present, solution 2 should also be present)
 # 2. Check that all disconts in the sinex file are in the disconts file
 # 3. Check epochs format
+# 4. Check for sites that have moved significantly
 
 estimate_cols = [
     "Site",
@@ -19,6 +23,12 @@ estimate_cols = [
 ]
 
 def check_solutions(con_estimates_check, noncon_estimates_check):
+    """
+    Checks there are no duplicate solutions numbers and that the remaining are correct
+
+    :param con_estimates_check: Array with new constraint site estimates using read_sinex_estimate
+    :param noncon_estimates_check: Array with new non-constraint site estimates using read_sinex_estimate
+    """
 
     vel_cols = ["velX", "velY", "velZ", "velX_sd", "velY_sd", "velZ_sd"]
 
@@ -66,6 +76,13 @@ def check_solutions(con_estimates_check, noncon_estimates_check):
     del df_all_estimates_check
 
 def check_disconts(new_dis_seperate, new_aus_sol_estimate):
+    """
+    Checks for duplicate, incorrect or missing disconts
+
+    :param new_dis_seperate: Array of discontinuties from the discontsYYYYMMDD.snx file using read_disconts
+    :param new_aus_sol_estimates: Array with new site estimates for all sites within GDA2020 using read_sinex_estimate
+    :return: Prints disconts that are incorrect
+    """
     dis_cols = [
         "Site",
         "Code1",
@@ -112,6 +129,12 @@ def check_disconts(new_dis_seperate, new_aus_sol_estimate):
     del missing
 
 def check_epochs(new_aus_sol_estimates):
+    """
+    Check epochs in solutions file are formatted correctly
+
+    :param new_aus_sol_estimates: Array with new site estimates for all sites within GDA2020 using read_sinex_estimate
+    :return: Prints epochs that are malformed
+    """
 
     df_new_aus_sol_estimates = pd.DataFrame(new_aus_sol_estimates, columns=["Site","Point","Solution","obs","start","end","mean"])
 
@@ -161,3 +184,102 @@ def check_epochs(new_aus_sol_estimates):
         print("  2.4 No incorrect epochs found")
 
     del df_new_aus_sol_estimates
+
+def xyz2enu(row):
+    """
+    Convert XYZ corrdinates in dataframe to ENU
+
+    :param row: pandas.Series with "staX", "staY", "staZ" columns.
+    :return: pandas.Series with "east", "north", "h", "zone"
+    """
+    lat, lon, h = convert.xyz2llh(row["staX"], row["staY"], row["staZ"])
+    _, zone, east, north, _, _ = convert.geo2grid(lat, lon)
+    return pd.Series([east, north, h, zone])
+
+def check_pos(
+    old_con_estimate,
+    new_con_estimate,
+    old_noncon_estimate,
+    new_noncon_estimate,
+    output_csv,
+):
+    """
+    Create a CSV showing station movement between two APREF versions
+    for both constraint and non-constraint solutions.
+
+    :param old_con_estimate: Array with old constraint site estimates using read_sinex_estimate
+    :param new_con_estimate: Array with new constraint site estimates using read_sinex_estimate
+    :param old_noncon_estimate: Array with old non-constraint site estimates using read_sinex_estimate
+    :param new_noncon_estimate: Array with new non-constraint site estimates using read_sinex_estimate
+    :return: Prints 10 largest movements and creates csv of all site movements
+    """
+
+    old_con_estimate_df = pd.DataFrame(old_con_estimate, columns=estimate_cols)
+    new_con_estimate_df = pd.DataFrame(new_con_estimate, columns=estimate_cols)
+
+    vel_cols = ["velX", "velY", "velZ", "velX_sd", "velY_sd", "velZ_sd"]
+
+    # Have to add velocity columns for noncon files
+    for col in vel_cols:
+        estimate_cols.append(col)
+
+    old_noncon_estimate_df = pd.DataFrame(old_noncon_estimate, columns=estimate_cols)
+    old_noncon_estimate_df = old_noncon_estimate_df.drop(columns=vel_cols)
+
+    new_noncon_estimate_df = pd.DataFrame(new_noncon_estimate, columns=estimate_cols)
+    new_noncon_estimate_df = new_noncon_estimate_df.drop(columns=vel_cols)   
+
+    for col in vel_cols:
+        estimate_cols.remove(col)
+
+    # Convert all coords to enu
+    old_con_estimate_df[["East", "North", "Height", "Zone"]] = old_con_estimate_df.apply(xyz2enu, axis=1)
+    new_con_estimate_df[["East", "North", "Height", "Zone"]] = new_con_estimate_df.apply(xyz2enu, axis=1)
+    old_noncon_estimate_df[["East", "North", "Height", "Zone"]] = old_noncon_estimate_df.apply(xyz2enu, axis=1)
+    new_noncon_estimate_df[["East", "North", "Height", "Zone"]] = new_noncon_estimate_df.apply(xyz2enu, axis=1)
+
+    # Remove columns no longer needed
+    drop_cols = estimate_cols.copy()
+    drop_cols.pop(0)
+    drop_cols.pop(0)
+
+    old_con_estimate_df = old_con_estimate_df.drop(columns=drop_cols)
+    new_con_estimate_df = new_con_estimate_df.drop(columns=drop_cols)
+
+    old_noncon_estimate_df = old_noncon_estimate_df.drop(columns=drop_cols)
+    new_noncon_estimate_df = new_noncon_estimate_df.drop(columns=drop_cols)
+
+    # Merge constraint then add tag
+    merged_con = pd.merge(old_con_estimate_df, new_con_estimate_df, on=["Site", "Solution"], suffixes=("_old", "_new"))
+
+    merged_con["Solution_type"] = "Constraint"
+
+    # Merge non-constraint then add flag
+    merged_noncon = pd.merge(old_noncon_estimate_df, new_noncon_estimate_df, on=["Site", "Solution"], suffixes=("_old", "_new"))
+
+    merged_noncon["Solution_type"] = "Non-constraint"
+
+    merged_df = pd.concat([merged_con, merged_noncon], ignore_index=True)
+
+    # Calculate amount moved
+    merged_df["East_moved"] = round(merged_df["East_new"] - merged_df["East_old"], 4)
+    merged_df["North_moved"] = round(merged_df["North_new"] - merged_df["North_old"], 4)
+    merged_df["Height_moved"] = round(merged_df["Height_new"] - merged_df["Height_old"], 4)
+
+    merged_df["Movement_3D"] = round(np.sqrt(
+        merged_df["East_moved"] ** 2
+        + merged_df["North_moved"] ** 2
+        + merged_df["Height_moved"] ** 2
+    ), 4)
+
+    # Sort by largest movement
+    merged_df = merged_df.sort_values("Movement_3D", ascending=False)
+
+    # Keep only columns needed
+    movement_df = merged_df[["Site", "Solution", "Solution_type", "East_moved", "North_moved", "Height_moved", "Movement_3D"]]
+
+    print("  2.5 List of the 10 largest site movements: ")
+    print(movement_df.head(10))
+
+    # Write CSV
+    merged_df.to_csv(output_csv, index=False)

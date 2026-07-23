@@ -11,7 +11,7 @@ import math
 import re
 import argparse
 
-from apref_comparison_qaqc import check_solutions, check_disconts, check_epochs
+from apref_comparison_qaqc import check_solutions, check_disconts, check_epochs, check_pos
 from apref_comparison_map import make_map
 
 """
@@ -204,6 +204,7 @@ Old APREF directory must contain:
   Full SINEX solution      : AUS0OPSSNX_*SOL.SNX
   AUS-only SINEX solution  : AUS0OPSSNX_*SOL.SNX.AUS
   APREF SINEX solution     : apref*.snx
+  Non-constraint solution  : *.SNX.NONCON.AUS
 
 New APREF directory must contain:
   Full SINEX solution      : AUS0OPSSNX_*SOL.SNX
@@ -272,6 +273,12 @@ for f in glob.glob(old + '/apref*.snx'):
 if old_con_sol is None:
     raise TypeError("Can't find old constraining solution sinex file")
 
+old_noncon_sol = None
+for f in glob.glob(old + '/*.SNX.NONCON.AUS'):
+    old_noncon_sol = f
+if old_noncon_sol is None:
+    raise TypeError("Can't find new non-constraining solution sinex file")
+
 new_full_sol = None
 for f in glob.glob(new + '/AUS0OPSSNX_*SOL.SNX'):
     new_full_sol = f
@@ -318,17 +325,14 @@ new_con_sol_sites = gnss.read_sinex_sites(new_con_sol)
 # 1. Check for duplicate solutions and that all solutions are present (ie if solution 1 and 3 are present, solution 2 should also be present)
 # 2. Check that all disconts in the sinex file are in the disconts file
 # 3. Check epochs format
+# 4. Check how much sites have moved
 
 print("2. Performing checks on sinex files...")
 
 # 1. Check solutions
-con_estimates_check = gnss.read_sinex_estimate(new_con_sol)
-noncon_estimates_check = gnss.read_sinex_estimate(new_noncon_sol)
-
-check_solutions(con_estimates_check, noncon_estimates_check)
-
-del con_estimates_check
-del noncon_estimates_check
+new_con_sol_estimates = gnss.read_sinex_estimate(new_con_sol)
+new_noncon_sol_estimates = gnss.read_sinex_estimate(new_noncon_sol)
+check_solutions(new_con_sol_estimates, new_noncon_sol_estimates)
 
 # 2. Check disconts
 
@@ -340,11 +344,25 @@ check_disconts(new_dis_seperate, new_aus_sol_estimates)
 
 del new_dis_seperate
 
-# 3. Check domes format and duplicate domes
+# 3. Check epoch format
 
 check_epochs(new_aus_sol_estimates)
 
 del new_aus_sol_estimates
+
+# 4. Moved
+
+old_con_sol_estimates = gnss.read_sinex_estimate(old_con_sol)
+old_noncon_sol_estimates = gnss.read_sinex_estimate(old_noncon_sol)
+
+csv_name = f"APREF_Movement_{old}_{new}.csv"
+
+check_pos(old_con_sol_estimates, new_con_sol_estimates, old_noncon_sol_estimates, new_noncon_sol_estimates, csv_name)
+
+del old_con_sol_estimates
+del new_con_sol_estimates
+del old_noncon_sol_estimates
+del new_noncon_sol_estimates
 
 #------ Overview ------#
 
@@ -636,9 +654,76 @@ df_all_changed = make_multi_column_table(df_all_changed, report_cols, ["Location
 
 print("6. Finding moved stations...")
 
-# Read solution estimates for positions
-old_site_estimate = gnss.read_sinex_estimate(old_con_sol)
-new_site_estimate = gnss.read_sinex_estimate(new_con_sol)
+# Read movement csv created before
+df_movement = pd.read_csv(csv_name)
+
+# Remove stations that were non_constraint
+df_movement = df_movement[
+    df_movement["Solution_type"] != "Non-constraint"
+]
+
+df_movement = add_location(df_movement, new_con_sol_sites)
+
+# Find stations that have moved by more then 10mm
+df_east_changed = df_movement[
+    abs(df_movement["East_moved"]) >= 0.010
+].copy()
+
+df_north_changed = df_movement[
+    abs(df_movement["North_moved"]) >= 0.010
+].copy()
+
+df_height_changed = df_movement[
+    abs(df_movement["Height_moved"]) >= 0.010
+].copy()
+
+# Create column to show movement
+df_east_changed["Change"] = (
+    "East Diff: "
+    + df_east_changed["East_moved"].round(4).astype(str)
+)
+
+df_north_changed["Change"] = (
+    "North Diff: "
+    + df_north_changed["North_moved"].round(4).astype(str)
+)
+
+df_height_changed["Change"] = (
+    "Height Diff: "
+    + df_height_changed["Height_moved"].round(4).astype(str)
+)
+
+df_pos_changed = pd.concat(
+    [
+        df_east_changed[report_cols],
+        df_north_changed[report_cols],
+        df_height_changed[report_cols],
+    ],
+    ignore_index=True,
+)
+
+# Find how many individual stations for count
+df_pos_unique = df_pos_changed.drop_duplicates(subset=["Site"])
+
+moved_sites = set(df_pos_unique["Site"])
+
+moved_stations_count = len(df_pos_unique)
+
+# Find largest movement for overview
+largest_movement_site = df_movement.iloc[0]["Site"]
+largest_movement = round(df_movement.iloc[0]["Movement_3D"], 3)
+
+df_pos_changed = make_multi_column_table(
+    df_pos_changed,
+    report_cols,
+    ["Location", "Site"],
+    2,
+)
+
+
+#------ Map ------#
+
+print("7. Creating map of stations...")
 
 estimate_cols = [
     "Site",
@@ -652,142 +737,10 @@ estimate_cols = [
     "staZ_sd",
 ]
 
-# Create df
-old_site_estimate_df = pd.DataFrame(old_site_estimate, columns=estimate_cols)
-new_site_estimate_df = pd.DataFrame(new_site_estimate, columns=estimate_cols)
-
-# Convert xyz to enu
-old_site_estimate_df[["East", "North", "Height", "Zone"]] = old_site_estimate_df.apply(xyz2enu, axis=1)
-new_site_estimate_df[["East", "North", "Height", "Zone"]] = new_site_estimate_df.apply(xyz2enu, axis=1)
-
 #remove columns no longer needed
 drop_cols = estimate_cols.copy()
 drop_cols.pop(0)
 drop_cols.pop(0)
-
-old_site_estimate_df = old_site_estimate_df.drop(columns=drop_cols)
-new_site_estimate_df = new_site_estimate_df.drop(columns=drop_cols)
-
-# Merge df 
-df_site_estimate_merged = pd.merge(
-    old_site_estimate_df,
-    new_site_estimate_df,
-    on=["Site", "Solution"],
-    suffixes=("_old", "_new")
-)
-
-# Find solutions where east changed by more then 10 mm
-df_east_changed = df_site_estimate_merged[
-    (abs(df_site_estimate_merged["East_old"] - df_site_estimate_merged["East_new"])) >= 0.010
-].copy()
-
-# Find solutions where north changed by more then 10 mm
-df_north_changed = df_site_estimate_merged[
-    (abs(df_site_estimate_merged["North_old"] - df_site_estimate_merged["North_new"])) >= 0.010
-].copy()
-
-# Find solutions where height changed by more then 10 mm
-df_height_changed = df_site_estimate_merged[
-    (abs(df_site_estimate_merged["Height_old"] - df_site_estimate_merged["Height_new"])) >= 0.010
-].copy()
-
-# Add location description
-df_east_changed = add_location(df_east_changed, new_con_sol_sites)
-df_north_changed = add_location(df_north_changed, new_con_sol_sites)
-df_height_changed = add_location(df_height_changed, new_con_sol_sites)
-
-# Add change desciption
-df_east_changed["Change"] = (
-    "East Diff: " + 
-    (df_east_changed["East_new"] - df_east_changed["East_old"])
-    .round(4)
-    .astype(str)
-)
-
-df_north_changed["Change"] = (
-    "North Diff: " + 
-    (df_north_changed["North_new"] - df_north_changed["North_old"])
-    .round(4)
-    .astype(str)
-)
-
-df_height_changed["Change"] = (
-    "Height Diff: " + 
-    (df_height_changed["Height_new"] - df_height_changed["Height_old"])
-    .round(4)
-    .astype(str)
-)
-
-# Remove unneeded columns
-drop_changed_cols = ["East_old", "East_new", "North_old", "North_new", "Height_old", "Height_new", "Zone_old", "Zone_new"]
-
-df_east_changed = df_east_changed.drop(columns=drop_changed_cols)
-df_north_changed = df_north_changed.drop(columns=drop_changed_cols)
-df_height_changed = df_height_changed.drop(columns=drop_changed_cols)
-
-# Combine all changed positions into one df
-df_pos_changed = pd.concat(
-    [
-        df_east_changed[report_cols],
-        df_north_changed[report_cols],
-        df_height_changed[report_cols],
-    ],
-    ignore_index=True
-)
-
-# find how many unique stations have moved
-df_pos_unique = df_pos_changed.drop_duplicates(subset=["Site"]).copy()
-
-moved_sites = set(df_pos_unique["Site"])
-
-# Get count of moved stations
-moved_stations_count = len(df_pos_unique)
-
-
-# Finding which station has largest 2D movement
-df_pos_2d = df_pos_changed.copy()
-
-# Extract diff type and numeric value from Change column
-df_pos_2d[["DiffType", "DiffValue"]] = df_pos_2d["Change"].str.extract(
-    r"(East|North|Height) Diff:\s*([-+]?\d*\.?\d+)"
-)
-
-df_pos_2d["DiffValue"] = df_pos_2d["DiffValue"].astype(float)
-
-# Keep only East and North changes
-df_horizontal = df_pos_2d[df_pos_2d["DiffType"].isin(["East", "North"])]
-
-# Pivot East/North into separate columns
-df_2d = (
-    df_horizontal
-    .pivot_table(
-        index=["Site", "Location", "Solution"],
-        columns="DiffType",
-        values="DiffValue",
-        aggfunc="first"
-    )
-    .reset_index()
-)
-
-# Optional: fill missing East/North with 0
-df_2d[["East", "North"]] = df_2d[["East", "North"]].fillna(0)
-
-# Calculate 2D movement
-df_2d["Movement_2D"] = np.sqrt(df_2d["East"]**2 + df_2d["North"]**2)
-
-# Sort largest first
-df_2d = df_2d.sort_values("Movement_2D", ascending=False)
-
-largest_movement = df_2d.iloc[0]["Movement_2D"].round(3)
-largest_movement_site = df_2d.iloc[0]["Site"]
-
-# Create columns
-df_pos_changed = make_multi_column_table(df_pos_changed, report_cols, ["Location", "Site"], 2)
-
-
-#------ Map ------#
-
-print("7. Creating map of stations...")
 
 con_estimates = gnss.read_sinex_estimate(new_con_sol)
 noncon_estimates = gnss.read_sinex_estimate(new_noncon_sol)
