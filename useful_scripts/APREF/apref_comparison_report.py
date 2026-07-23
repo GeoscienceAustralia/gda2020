@@ -142,17 +142,6 @@ def format_epoch(epoch):
     """
     return str(epoch).replace(":00000", "")
 
-def xyz2enu(row):
-    """
-    Convert XYZ corrdinates in dataframe to ENU
-
-    :param row: pandas.Series with "staX", "staY", "staZ" columns.
-    :return: pandas.Series with "east", "north", "h", "zone"
-    """
-    lat, lon, h = convert.xyz2llh(row["staX"], row["staY"], row["staZ"])
-    _, zone, east, north, _, _ = convert.geo2grid(lat, lon)
-    return pd.Series([east, north, h, zone])
-
 def get_unique_sites(sites_list):
     """
     Get unique sites from a list of sites.
@@ -350,7 +339,7 @@ check_epochs(new_aus_sol_estimates)
 
 del new_aus_sol_estimates
 
-# 4. Moved
+# 4. Check moved sites
 
 old_con_sol_estimates = gnss.read_sinex_estimate(old_con_sol)
 old_noncon_sol_estimates = gnss.read_sinex_estimate(old_noncon_sol)
