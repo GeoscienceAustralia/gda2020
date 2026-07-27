@@ -6,9 +6,7 @@ from geodepy import convert as convert
 import sys
 import glob
 import pandas as pd
-import numpy as np
 import math
-import re
 import argparse
 
 from apref_comparison_qaqc import check_solutions, check_disconts, check_epochs, check_pos
