@@ -4,7 +4,7 @@ import cartopy.feature as cfeature
 
 def make_map(df):
     """
-    Generate a map of Asutralia showing Apref stations, highlighting stations with changes.
+    Generate a map of Australia showing Apref stations, highlighting stations with changes.
 
     :param df: pandas.DataFrame containing station information with columns 'lon', 'lat', and 'Category'.
     :return: None. Saves map as 'apref_station_map.png'.
@@ -16,7 +16,8 @@ def make_map(df):
     ax = plt.axes(projection=data_crs)
 
     # Extent for GDA2020
-    ax.set_extent([99, 166, -44.5, -8], crs=data_crs)
+    AUSTRALIA_EXTENT = [99, 166, -44.5, -8]
+    ax.set_extent(AUSTRALIA_EXTENT, crs=data_crs)
 
     # Base map styling based on GA guide colours
     ocean_colour = (190/255, 232/255, 255/255)    # Ocean
@@ -94,3 +95,4 @@ def make_map(df):
 
     plt.tight_layout()
     plt.savefig("apref_station_map.png", dpi=300, bbox_inches="tight")
+    plt.close(fig)

@@ -10,7 +10,7 @@ from geodepy import convert as convert
 # 3. Check epochs format
 # 4. Check for sites that have moved significantly
 
-estimate_cols = [
+ESTIMATE_COLS = [
     "Site",
     "Solution",
     "refEpoch",
@@ -30,6 +30,8 @@ def check_solutions(con_estimates_check, noncon_estimates_check):
     :param noncon_estimates_check: Array with new non-constraint site estimates using read_sinex_estimate
     """
 
+    estimate_cols = ESTIMATE_COLS.copy()
+
     vel_cols = ["velX", "velY", "velZ", "velX_sd", "velY_sd", "velZ_sd"]
 
     df_con_estimates = pd.DataFrame(con_estimates_check, columns=estimate_cols)
@@ -45,7 +47,7 @@ def check_solutions(con_estimates_check, noncon_estimates_check):
 
     df_all_estimates_check = pd.concat([df_con_estimates, df_noncon_estimates_check], ignore_index=True)
 
-    # Check for duplicates, remove 21NA and KALG as they are duped on purpose
+    # Check for duplicates, remove ALIC and MOBS as they are duped on purpose
     duplicates = df_all_estimates_check[df_all_estimates_check.duplicated(subset=["Site", "Solution"], keep=False)].query("Site not in ['ALIC', 'MOBS']").sort_values(by=["Site", "Solution"])
 
     missing_solutions = {}
@@ -70,10 +72,6 @@ def check_solutions(con_estimates_check, noncon_estimates_check):
             print(f"    {site}: {solutions}")
     else:
         print("  2.2 No missing solutions found")
-
-    del df_noncon_estimates_check
-    del df_con_estimates
-    del df_all_estimates_check
 
 def check_disconts(new_dis_seperate, new_aus_sol_estimate):
     """
@@ -119,14 +117,6 @@ def check_disconts(new_dis_seperate, new_aus_sol_estimate):
             print(f"    Site: {site} Point: {point}")
     else:
         print("  2.3 No discontinuities are missing from discont file")
-
-    del df_new_dis_seperate
-    del df_new_aus_sol_estimates
-    del solution_counts
-    del sites_to_check
-    del disc_pairs
-    del site_pairs
-    del missing
 
 def check_epochs(new_aus_sol_estimates):
     """
@@ -183,8 +173,6 @@ def check_epochs(new_aus_sol_estimates):
     else:
         print("  2.4 No incorrect epochs found")
 
-    del df_new_aus_sol_estimates
-
 def xyz2enu(row):
     """
     Convert XYZ corrdinates in dataframe to ENU
@@ -213,6 +201,8 @@ def check_pos(
     :param new_noncon_estimate: Array with new non-constraint site estimates using read_sinex_estimate
     :return: Prints 10 largest movements and creates csv of all site movements
     """
+
+    estimate_cols = ESTIMATE_COLS.copy()
 
     old_con_estimate_df = pd.DataFrame(old_con_estimate, columns=estimate_cols)
     new_con_estimate_df = pd.DataFrame(new_con_estimate, columns=estimate_cols)
