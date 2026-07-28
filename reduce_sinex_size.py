@@ -24,17 +24,24 @@ home = os.path.expanduser("~")
 os.chdir(home + '/apref/workDir/')
 
 # Get the input file name
-for f in glob.glob('apref*.snx'):
-    ifile = f
-try:
-    ifile
-except NameError:
+files = glob.glob('apref*.snx')
+
+if not files:
     sys.exit('There is no APREF SINEX file by that name in the working directory')
+
+if len(files)> 1:
+    sys.exit('There are multiple APREF SINEX files in the working directory') 
+
+ifile = files[0]  
 
 # Make copy of original file
 copy2(ifile, f"{ifile}.VEL")
 
 # Remove velocity parameters and rename output file
-geodepy.gnss.remove_velocity_sinex(ifile)
+try:
+    geodepy.gnss.remove_velocity_sinex(ifile)
+except: 
+    raise NameError("Velocities could not be removed from sinex file")
+
 ofile = ifile
 os.rename('output.snx', ofile)
