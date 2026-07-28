@@ -16,7 +16,8 @@
 import os
 import glob
 import geodepy.gnss
-
+import sys
+from shutil import copy2
 
 # Get the path to the home directory and move to the working directory
 home = os.path.expanduser("~")
@@ -31,7 +32,7 @@ except NameError:
     sys.exit('There is no APREF SINEX file by that name in the working directory')
 
 # Make copy of original file
-os.system(f'cp {ifile} {ifile}.VEL')
+copy2(ifile, f"{ifile}.VEL")
 
 # Remove velocity parameters and rename output file
 geodepy.gnss.remove_velocity_sinex(ifile)
