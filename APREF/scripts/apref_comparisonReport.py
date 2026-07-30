@@ -9,8 +9,8 @@ import pandas as pd
 import math
 import argparse
 
-from gda2020.APREF.scripts.apref_comparison_qaqc import check_solutions, check_disconts, check_epochs, check_pos
-from gda2020.APREF.scripts.apref_comparison_map import make_map
+from gda2020.APREF.scripts.apref_comparisonQAQC import check_solutions, check_disconts, check_epochs, check_pos
+from gda2020.APREF.scripts.apref_comparisonMap import make_map
 
 """
 This script will create a transition report between different apref versions. 
