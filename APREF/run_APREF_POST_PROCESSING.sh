@@ -21,17 +21,17 @@ cp AUS0OPSSNX_*_00U_DSC.SNX disconts$YYYYMMDD.snx
 
 # Remove stations outside of GDA2020
 printf "\nRunning exciseStationsAPREF.py, can take ~2 hour...\n"
-exciseStationsAPREF.py
+apref_exciseStations.py
 
 # Transform SINEX coordinates
 # - ITRF2020@2015.0 --> ITRF2014@2015.0
 # - Comment this out if APREF is ITRF2014
 printf "\nRunning transformSINEX.py, can take some time...\n"
-transformSINEX_APREF.py
+apref_transformSinex.py
 
 # Create Type-B uncertanty file
 printf "\nRunning createTypeB.py...\n"
-createTypeB.py  AUS0OPSSNX_*_00U_SOL.SNX.AUS
+apref_createTypeB.py  AUS0OPSSNX_*_00U_SOL.SNX.AUS
 
 # Transform all coordiantes to the GDA2020 epoch
 printf "\nRunning sinex2epoch, can take ~6 hours...\n"
@@ -39,14 +39,14 @@ sinex2epoch -e20:001 -E1.50379:1.18346:1.20716  AUS0OPSSNX_*_00U_SOL.SNX.AUS &> 
 
 # Split APREF into constraint and non-constraint sinex files
 printf "\nRunning splitApref.py, can take ~30 minutes...\n"
-splitApref.py
+apref_split.py
 
 # Copy into new filename
 cp SNXEPO.SNX.CON.AUS apref$YYYYMMDD.snx
 
 # Create point clusters
 printf "\nRunning createPC.pl...\n"
-createPC.pl
+apref_createPC.pl
 
 # Rename disconts file
 mv apref*.disconts apref$YYYYMMDD.disconts
@@ -56,11 +56,11 @@ rm *.xml
 
 # Create baselines
 printf "\nRunning aprefCreateBLs.py...\n"
-aprefCreateBLs.py $YYYYMMDD
+apref_createBLs.py $YYYYMMDD
 
 # Reduce size of sinex file
 printf "\nRunning reduce_sinex_size.py, can take ~5 minutes...\n"
-reduce_sinex_size.py
+apref_reduceSinexSize.py
 
 # Make new APREF solution directory, and move relevant files there
 mkdir ../$YYYYMMDD
@@ -71,11 +71,11 @@ cd ..
 
 # Run QA script
 printf "\nRunning xvsolfin_qa.py...\n"
-xvsolfin_qa.py
+apref_xvsolfinQA.py
 
 # Run RVS checking script
 printf "\nRunning checkRVS.py...\n"
-checkRVS.py
+apref_checkRVS.py
 
 # Move files to APREF solution directory
 mv xvsolfin$YYYYMMDD.txt apref$YYYYMMDD.rvs $YYYYMMDD
