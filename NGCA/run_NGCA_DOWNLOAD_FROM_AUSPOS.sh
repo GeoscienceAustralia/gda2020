@@ -1,5 +1,8 @@
 #!/usr/bin/bash
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export PATH="$PATH:$SCRIPT_DIR/scripts"
+
 # Archive
 ARCHIVE=20240715
 
