@@ -28,11 +28,11 @@ for JURIS in ${JURIS_LIST[*]}; do
 
     # Run verifySub.py
     printf "\nexecuting verifySub.py for ${JURIS^^}...\n"
-    verifySub.py
+    ngca_verifySub.py
 
     # Run prepFiles.py
     printf "\nexecuting prepFiles.py for ${JURIS^^}...\n"
-    prepFiles.py
+    ngca_prepFiles.py
 
     # Identify number of jobs
     NumJobs=$(ls rinexantls/ | wc -l)    

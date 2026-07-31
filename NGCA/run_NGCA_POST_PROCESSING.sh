@@ -37,42 +37,42 @@ for JURIS in ${JURIS_LIST[*]}; do
     # Coordinate transformation
     # - ITRF2020 --> ITRF2014
     printf "\nExecuting transformSINEX_NGCA.py...\n"
-    transformSINEX_NGCA.py
+    ngca_transformSinex.py
 
     # Remove stations outside of GDA2020 from NGCA 
     printf "\nExecuting exciseStationsNGCA.py...\n"
-    exciseStationsNGCA.py
+    ngca_exciseStations.py
 
     # Select stations from APREF to use as constraints
     printf "\nExecuting selectRef.py...\n"
-    selectRef.py
+    ngca_selectRef.py
 
     # Form baselines from the stations in a SINEX file and create DynaML formatted files
     printf "\nExecuting createBLs.py...\n"
-    createBLs.py
+    ngca_createBLs.py
 
     # Update translation tables in transTables/ with those on the GA ftp server
     printf "\nExecuting updateTTables.py...\n"
-    updateTTables.py
+    ngca_updateTTables.py
 
     # Check the jurisdicitonal translation tables for duplicates
     printf "\nExecuting checkTTables.py...\n"
-    checkTTables.py 
+    ngca_checkTTables.py 
 
     # Translate stations that use the conventional 4-character ID to the name commonly used by the state or jurisdiction
     printf "\nExecuting stationTrans.pl...\n"
-    stationTrans.pl
+    ngca_stationTrans.pl
 
     # Navigate to baseline directory
     cd ../baselines
 
     # Run minimally-constrained adjustment for each baseline cluster
     printf "\nExecuting minAdjust.pl...\n"
-    minAdjust.pl
+    ngca_minAdjust.pl
 
     # Report, organise, and generate Sigma0.dat
     printf "\nExecuting howgoesit.pl...\n"
-    howgoesit.pl
+    ngca_howGoesIt.pl
 
     # Print out the last Sigma0 from the Sigma0 file
     printf "\nHighest Sigma0s for $JURIS:  \n"
@@ -81,19 +81,19 @@ for JURIS in ${JURIS_LIST[*]}; do
 
     # Update the Vscale in the NGCA baseline files based on the values in sigma0.dat
     printf "\nExecuting addSigma0.py...\n"
-    addSigma0.py
+    ngca_addSigma0.py
     
     # Combine into a single file
     printf "\nExecuting combineNGCA.py...\n"
-    combineNGCA.py
+    ngca_combine.py
 
     # Run fully constrained adjustment performed after NGCA scaling
     printf "\nExecuting fullAdjust.py...\n"
-    fullAdjust.py
+    ngca_fullAdjust.py
 
     # Organise results
     printf "\nExecuting ngcaResults.py...\n"
-    ngcaResults.py
+    ngca_results.py
 
 done
 
