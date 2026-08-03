@@ -1,0 +1,20 @@
+APREF:
+  folders:
+    - apref/input
+    - apref/output
+    - apref/logs
+NGCA:
+  folders:
+    - ngca/input
+    - ngca/output
+    - ngca/logs
+NADJ:
+  folders:
+    - nadj/input
+    - nadj/output
+    - nadj/logs
+QAQC:
+  folders:
+    - qaqc/input
+    - qaqc/output
+    - qaqc/logs
