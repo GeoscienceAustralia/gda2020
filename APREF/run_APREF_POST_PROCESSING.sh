@@ -5,8 +5,6 @@ if [[ -d "$SCRIPT_DIR/scripts" ]] && [[ ":$PATH:" != *":$SCRIPT_DIR/scripts:"* ]
     export PATH="$PATH:$SCRIPT_DIR/scripts"
 fi
 
-echo $PATH
-
 # APREF solution
 YYYYMMDD=20240713
 
