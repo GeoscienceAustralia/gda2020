@@ -1,7 +1,11 @@
 #!/usr/bin/bash
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export PATH="$PATH:$SCRIPT_DIR/scripts"
+if [[ -d "$SCRIPT_DIR/scripts" ]] && [[ ":$PATH:" != *":$SCRIPT_DIR/scripts:"* ]]; then
+    export PATH="$PATH:$SCRIPT_DIR/scripts"
+fi
+
+echo $PATH
 
 # APREF solution
 YYYYMMDD=20240713
