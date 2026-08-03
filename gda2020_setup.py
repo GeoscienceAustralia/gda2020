@@ -18,8 +18,19 @@ import yaml
 VALID_PROCESSES = ["APREF", "NGCA", "NADJ", "QAQC"]
 
 def load_config(config_path):
-    with open(config_path, "r") as file:
-        return yaml.safe_load(file)
+    # Load config file and validate it contains correct number of processes
+    try:
+        with open(config_path, "r") as file:
+            config = yaml.safe_load(file)
+            if len(config) != len(VALID_PROCESSES):
+                raise ValueError(f"Config file must contain exactly {len(VALID_PROCESSES)} processes.")
+            return config
+
+    # Handle file not found and YAML parsing errors
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Config file not found: {config_path}")
+    except yaml.YAMLError as e:
+        raise ValueError(f"Error parsing YAML file: {e}")
 
 def parse_args():
 
@@ -115,8 +126,8 @@ def list_user_input(user_input):
     selected = []
 
     # Loop through each user input and find the corresponding process
-    for input in user_inputs:
-        value = input.strip().upper()
+    for item in user_inputs:
+        value = item.strip().upper()
 
         # If all is selected, return all processes
         if value in {"ALL", "A", "5"}:
@@ -237,7 +248,7 @@ def confirm_clean(processes):
     """
 
     print("\nWARNING")
-    print("The following processes will be premanently cleaned:")
+    print("The following processes will be permanently cleaned:")
 
     for process in processes:
         print(f"  {process}")
@@ -274,7 +285,10 @@ def clean_processes(repo_root, processes, dry_run=False):
     # Iterate through each process
     for process in processes:
         for folder in CONFIG[process]["folders"]:
-            folder_path = repo_root / folder
+            folder_path = (repo_root / folder).resolve()
+
+            if not folder_path.is_relative_to(repo_root):
+                raise ValueError(f"  Will not delete file outside repo root: {folder_path}")
 
             if folder_path.exists():
                 if dry_run:
@@ -290,7 +304,6 @@ def clean_processes(repo_root, processes, dry_run=False):
 def main():
     args = parse_args()
     processes = determine_processes(args)
-    config = load_config(args.repo_root / "config.yaml")
 
     if args.clean:
         clean_processes(
