@@ -1,3 +1,14 @@
+metadata:
+  version: 1.0
+  description: Configuration for GDA2020 repository setup
+  field-descriptions:
+    folders: List of folders to create for each process.
+    downloads: List of download configurations for each process.
+      recursive: Whether to download files recursively (true/false).
+      most_recent: Whether to download only the most recent file/folder in directory (true/false)(Most recent is done by name).
+      jurisdiction_dependant: Whether the download is jurisdiction dependant (true/false). If true, the download will be done for each jurisdiction.
+      preserve_folder: Whether to preserve the folder structure when downloading (true/false).
+
 APREF:
   folders:
     - apref/input
