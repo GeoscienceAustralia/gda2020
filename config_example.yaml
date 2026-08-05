@@ -19,6 +19,12 @@ APREF:
     - apref/input
     - apref/output
     - apref/logs
+  downloads:
+    - uri: s3://your-bucket/
+      destination: apref/
+      most_recent: true
+      recursive: true
+      preserve_folder: true  
 NGCA:
   folders:
     - ngca/input
