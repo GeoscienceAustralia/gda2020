@@ -253,10 +253,16 @@ def setup_single_process(repo_root, process, dry_run=False):
         # If the download is jurisdiction dependant, loop through each jurisdiction and download files for each one
         if download.get("jurisdiction_dependant"):
             for jurisdiction in JURIS:
+
+                # If the jurisdiction_upper_case flag is not set or is False, convert the jurisdiction to lower case
                 if not download.get("jurisdiction_upper_case", False):
                     jurisdiction = jurisdiction.lower()
+
+                # If the include pattern is not specified, raise an error
                 if not download.get("include"):
                     raise ValueError(f"  Download for {process} with jurisdiction_dependant=True must have an 'include' pattern specified.")
+
+                # Download the files for the jurisdiction
                 aws_download(uri=download["uri"], 
                              destination=download["destination"], 
                              include=f"{jurisdiction}{download['include']}", 
