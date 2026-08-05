@@ -2,12 +2,16 @@ metadata:
   version: 1.0
   description: Configuration for GDA2020 repository setup
   field-descriptions:
-    folders: List of folders to create for each process.
-    downloads: List of download configurations for each process.
+    folders: 
+      description: List of folders to create for each process.
+    downloads: 
+      description: List of download configurations for each process.
       recursive: Whether to download files recursively (true/false).
       most_recent: Whether to download only the most recent file/folder in directory (true/false)(Most recent is done by name).
       jurisdiction_dependant: Whether the download is jurisdiction dependant (true/false). If true, the download will be done for each jurisdiction.
+      jurisdiction_upper_case: Optional Bool flag to indicate if the jurisdiction names should be in upper case (true/false). If not specified, the default is false.
       preserve_folder: Whether to preserve the folder structure when downloading (true/false).
+      include: Optional list of file patterns to include in the download (e.g., "*.adj.xml"). If not specified, all files will be downloaded.
 
 APREF:
   folders:

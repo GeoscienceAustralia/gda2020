@@ -227,7 +227,7 @@ def setup_single_process(repo_root, process, dry_run=False):
     print()
     print("Creating folders:")
     # Setup folders for the process
-    folders = CONFIG[process]["folders"]
+    folders = CONFIG[process].get("folders", [])
 
     for folder in folders:
         folder_path = repo_root / folder
@@ -246,13 +246,15 @@ def setup_single_process(repo_root, process, dry_run=False):
     print("Downloading files:")
 
     # Download files for process
-    downloads = CONFIG[process]["downloads"]
+    downloads = CONFIG[process].get("downloads", [])
 
     for download in downloads:
 
         # If the download is jurisdiction dependant, loop through each jurisdiction and download files for each one
         if download.get("jurisdiction_dependant"):
             for jurisdiction in JURIS:
+                if not download.get("jurisdiction_upper_case", False):
+                    jurisdiction = jurisdiction.lower()
                 if not download.get("include"):
                     raise ValueError(f"  Download for {process} with jurisdiction_dependant=True must have an 'include' pattern specified.")
                 aws_download(uri=download["uri"], 
