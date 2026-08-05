@@ -274,6 +274,22 @@ def setup_single_process(repo_root, process, dry_run=False):
         # Otherwise, download the files as specified in the config
         else:
             aws_download(**download, dry_run=dry_run)
+
+        # Unzip the downloaded files if unzip flag is set to True
+        if download.get("unzip", False):
+            # Unzip the downloaded files if unzip flag is set to True
+            destination_path = Path(download["destination"])
+            if not destination_path.exists():
+                raise ValueError(f"  Destination path does not exist: {destination_path}")
+
+            for zip_file in destination_path.glob("*.zip"):
+                if dry_run:
+                    print(f"  Would unzip: {zip_file}")
+                else:
+                    print(f"  Unzipping {zip_file}")
+                    shutil.unpack_archive(zip_file, destination_path)
+                    print(f"  Unzipped: {zip_file}")
+                    Path.unlink(zip_file)
     print()
 
 def find_most_recent(uri, destination, preserve_folder=False):
@@ -323,7 +339,7 @@ def find_most_recent(uri, destination, preserve_folder=False):
 
     return uri, destination
 
-def aws_download(uri, destination, include=None, recursive=False, most_recent=False, preserve_folder=False, dry_run=False):
+def aws_download(uri, destination, include=None, recursive=False, most_recent=False, preserve_folder=False, dry_run=False, **kwargs):
     """
     Download files from AWS S3.
 

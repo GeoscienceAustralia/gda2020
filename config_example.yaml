@@ -12,6 +12,7 @@ metadata:
       jurisdiction_upper_case: Optional Bool flag to indicate if the jurisdiction names should be in upper case (true/false). If not specified, the default is false.
       preserve_folder: Whether to preserve the folder structure when downloading (true/false).
       include: Optional list of file patterns to include in the download (e.g., "*.adj.xml"). If not specified, all files will be downloaded.
+      unzip: Whether to unzip downloaded files (true/false). Default is false
 
 APREF:
   folders:
