@@ -26,7 +26,7 @@ def load_config(config_path):
         with open(config_path, "r") as file:
             config = yaml.safe_load(file)
             if len(config) != len(VALID_PROCESSES) + 1: # +1 for metadata section
-                raise ValueError(f"Config file must contain exactly {len(VALID_PROCESSES)} processes.")
+                raise ValueError(f"Config file must contain exactly {len(VALID_PROCESSES) + 1} processes.")
             return config
 
     # Handle file not found and YAML parsing errors
