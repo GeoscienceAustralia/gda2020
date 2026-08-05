@@ -13,16 +13,19 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 import shutil
+import subprocess
 import yaml
 
 VALID_PROCESSES = ["APREF", "NGCA", "NADJ", "QAQC"]
+
+JURIS = ["ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"]
 
 def load_config(config_path):
     # Load config file and validate it contains correct number of processes
     try:
         with open(config_path, "r") as file:
             config = yaml.safe_load(file)
-            if len(config) != len(VALID_PROCESSES):
+            if len(config) != len(VALID_PROCESSES) + 1: # +1 for metadata section
                 raise ValueError(f"Config file must contain exactly {len(VALID_PROCESSES)} processes.")
             return config
 
@@ -221,6 +224,8 @@ def setup_single_process(repo_root, process, dry_run=False):
 
     print(f"Setting up {process}")
 
+    print()
+    print("Creating folders:")
     # Setup folders for the process
     folders = CONFIG[process]["folders"]
 
@@ -238,6 +243,125 @@ def setup_single_process(repo_root, process, dry_run=False):
                 print(f"  Created: {folder_path}")
 
     print()
+    print("Downloading files:")
+
+    # Download files for process
+    downloads = CONFIG[process]["downloads"]
+
+    for download in downloads:
+
+        # If the download is jurisdiction dependant, loop through each jurisdiction and download files for each one
+        if download.get("jurisdiction_dependant"):
+            for jurisdiction in JURIS:
+                if not download.get("include"):
+                    raise ValueError(f"  Download for {process} with jurisdiction_dependant=True must have an 'include' pattern specified.")
+                aws_download(uri=download["uri"], 
+                             destination=download["destination"], 
+                             include=f"{jurisdiction}{download['include']}", 
+                             recursive=download.get("recursive", False), 
+                             most_recent=download.get("most_recent", False),
+                             preserve_folder=download.get("preserve_folder", False),
+                             dry_run=dry_run)
+
+        # Otherwise, download the files as specified in the config
+        else:
+            aws_download(**download, dry_run=dry_run)
+    print()
+
+def find_most_recent(uri, destination, preserve_folder=False):
+    """
+    Find the most recent file or folder at an S3 URI path and return the updated URI and destination path.
+
+    :param uri: S3 URI to search
+    :type uri: str
+    :param destination: Local destination path
+    :type destination: Path
+    :param preserve_folder: If True, preserve the folder structure when downloading
+    :type preserve_folder: bool
+    :return: Updated URI and destination path
+    :rtype: tuple
+    """
+    # List contents of S3 URI
+    dir_contents = subprocess.run(["aws", "s3", "ls", uri], capture_output=True, text=True, check=True)
+    
+    entries = []
+
+    # Iterate through the output lines and extract file/folder names
+    for line in dir_contents.stdout.splitlines():
+        parts = line.split()
+        if len(parts) == 0:
+            continue
+    
+        if parts[0] == "PRE":
+            entries.append(parts[1])
+    
+        elif len(parts) >= 4:
+            entries.append(parts[-1])
+    
+    if not entries:
+        raise ValueError(f"  No files found in {uri}")
+
+    # Find most recent file/folder and change URI
+    latest = sorted(entries)[-1]
+    
+    if not uri.endswith("/"):
+        uri += "/"
+    
+    uri += latest
+
+    # If preserve_folder is True, append the last part of the URI to the destination path
+    if preserve_folder:
+        destination = destination / uri.rstrip("/").split("/")[-1]
+
+    return uri, destination
+
+def aws_download(uri, destination, include=None, recursive=False, most_recent=False, preserve_folder=False, dry_run=False):
+    """
+    Download files from AWS S3.
+
+    :param uri: S3 URI to download from.
+    :type uri: str
+    :param destination: Local destination path.
+    :type destination: Path
+    :param include: Pattern to include specific files.
+    :type include: str
+    :param recursive: If True, download recursively.
+    :type recursive: bool
+    :param most_recent: If True, download only the most recent file.
+    :type most_recent: bool
+    :param preserve_folder: If True, preserve the folder structure when downloading.
+    :type preserve_folder: bool
+    :param dry_run: If True, show what would be downloaded without downloading files.
+    :type dry_run: bool
+    """
+    destination = Path(destination)
+
+    # Find most recent file/folder if requested
+    if most_recent:
+        uri, destination = find_most_recent(uri, destination, preserve_folder=preserve_folder)
+
+    if dry_run:
+        print(f"  Would download from {uri} to {destination}")
+        return
+    else:
+        print(f"  Downloading from {uri} to {destination}")
+
+        # Copy files from S3
+        cmd = ["aws", "s3", "cp", uri, str(destination)]
+
+        if recursive:
+            cmd.append("--recursive")
+
+        if include:
+            cmd.extend([
+                "--exclude", "*",
+                "--include", include
+            ])
+
+        try:
+            subprocess.run(cmd, check=True)
+        except subprocess.CalledProcessError as e:
+            raise ValueError(f"  Download failed: {e}")
 
 def confirm_clean(processes):
     """
@@ -324,7 +448,6 @@ def main():
 # Load config file
 CONFIG_FILE = Path(__file__).parent / "config.yaml"
 CONFIG = load_config(CONFIG_FILE)
-print(CONFIG)
 
 if __name__ == "__main__":
     main()
