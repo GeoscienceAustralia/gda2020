@@ -25,8 +25,12 @@ def load_config(config_path):
     try:
         with open(config_path, "r") as file:
             config = yaml.safe_load(file)
-            if len(config) != len(VALID_PROCESSES) + 1: # +1 for metadata section
-                raise ValueError(f"Config file must contain exactly {len(VALID_PROCESSES) + 1} processes.")
+
+            required_sections = set(VALID_PROCESSES + ["metadata"])
+
+            # Check if config has exactly section required
+            if set(config.keys()) != required_sections:
+                raise ValueError(f"Config file must contain exactly {sorted(required_sections)}")
             return config
 
     # Handle file not found and YAML parsing errors
@@ -292,9 +296,10 @@ def setup_single_process(repo_root, process, dry_run=False):
                     Path.unlink(zip_file)
     print()
 
-def find_most_recent(uri, destination, preserve_folder=False):
+def find_latest_by_name(uri, destination, preserve_folder=False):
     """
     Find the most recent file or folder at an S3 URI path and return the updated URI and destination path.
+    This is completed by looking at the name of file file/folder so using YYYMMDD in naming is advised.
 
     :param uri: S3 URI to search
     :type uri: str
@@ -362,7 +367,7 @@ def aws_download(uri, destination, include=None, recursive=False, most_recent=Fa
 
     # Find most recent file/folder if requested
     if most_recent:
-        uri, destination = find_most_recent(uri, destination, preserve_folder=preserve_folder)
+        uri, destination = find_latest_by_name(uri, destination, preserve_folder=preserve_folder)
 
     if dry_run:
         print(f"  Would download from {uri} to {destination}")
@@ -383,10 +388,13 @@ def aws_download(uri, destination, include=None, recursive=False, most_recent=Fa
             ])
 
         try:
-            subprocess.run(cmd, check=True)
+            subprocess.run(cmd, check=True, capture_output=True, text=True)
         except subprocess.CalledProcessError as e:
-            raise ValueError(f"  Download failed: {e}")
-
+            raise RuntimeError(f"  Download failed: {e.stderr}")
+        except FileNotFoundError:
+            raise RuntimeError("AWS CLI is not installed or not in PATH")
+        except:
+            raise RuntimeError(f"Downloading failed")
 def confirm_clean(processes):
     """
     Confirm with the user before cleaning specified processes.
