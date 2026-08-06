@@ -41,7 +41,6 @@ listed.
 
 import sys
 import glob
-import os
 from numpy import array
 
 from geodepy.gnss import read_solution_epochs
