@@ -18,7 +18,6 @@ v uncert: stations that have vertical uncertainties larger than this will be
 
 from glob import glob
 import argparse
-import sys
 
 # Create an ArgumentParser object
 parser = argparse.ArgumentParser(

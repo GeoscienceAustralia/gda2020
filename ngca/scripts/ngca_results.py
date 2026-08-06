@@ -7,7 +7,6 @@
 # NGCA DEV Destination: s3://gda2020-ngca/2025_Testing/NGCA/
 # -> AGRS Portal Destination: s3://gda2020-ngca/2025_Testing/Portal/
 
-import sys
 import os
 import shutil
 import glob

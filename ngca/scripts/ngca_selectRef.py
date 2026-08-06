@@ -2,7 +2,7 @@
 
 # renameless 20251111 - added additonal debug prints, deactivated all except print when removing SINEX due to zero user stations
 
-import sys, subprocess, os, logging
+import subprocess, os, logging
 from glob import glob
 from math import sqrt
 from pathlib import Path

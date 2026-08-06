@@ -6,12 +6,8 @@
 # Import modules
 import argparse
 import re
-import pysftp
-import sys
 import os
-import shutil
 import glob
-from ftplib import FTP
 from datetime import datetime
 from pathlib import Path
 
