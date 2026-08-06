@@ -26,9 +26,7 @@ HISTORY:
 """
 import sys
 import os
-import datetime
 import re
-from glob import glob
 from numpy import matrix, zeros, copy
 
 

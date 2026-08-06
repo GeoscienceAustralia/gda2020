@@ -43,8 +43,6 @@ listed.
 
 import sys
 import glob
-import os
-from numpy import ndarray
 
 from geodepy.gnss import read_solution_epochs
 from geodepy.gnss import read_sinex_estimate
