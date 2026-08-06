@@ -9,9 +9,6 @@ import re
 import os
 import datetime
 
-import sys
-
-
 # Compile the regular expressions
 p1 = re.compile(r'^\w{8}\.\d{2}o$', re.I)
 

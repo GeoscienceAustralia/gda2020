@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-import os, sys
-import glob
+import os
 import shutil
 
 

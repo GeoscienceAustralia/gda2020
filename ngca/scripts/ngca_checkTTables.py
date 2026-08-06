@@ -4,7 +4,6 @@
 
 import glob
 import os
-import sys
 from pathlib import Path
 
 # Create lists of stations and 4-character IDs to ignore

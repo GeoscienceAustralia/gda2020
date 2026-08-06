@@ -5,7 +5,6 @@ S3 bucket
 """
 
 import  os
-import glob
 from pathlib import Path
 
 # Define the jurisdictions
@@ -29,7 +28,7 @@ for f in os.listdir('.'):
         jurisdiction = f[:2].lower()
     else:
         print('File ' + f + ' has an unknown jurisdiction')
-        unlink(f)
+        Path.unlink(f)
 
     # Determine the date
     date = f.split('.')[0]

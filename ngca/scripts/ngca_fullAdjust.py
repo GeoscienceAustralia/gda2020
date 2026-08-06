@@ -4,7 +4,6 @@
 
 # renameless 20251111 - include E N coordinates via stn-coord-types and retain .xyz files for use with DynaDiff
 
-import sys
 import os
 import glob
 import re
