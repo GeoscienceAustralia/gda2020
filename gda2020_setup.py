@@ -28,7 +28,7 @@ def load_config(config_path):
 
             required_sections = set(VALID_PROCESSES + ["metadata"])
 
-            # Check if config has exactly section required
+            # Check if config has exactly sections required
             if set(config.keys()) != required_sections:
                 raise ValueError(f"Config file must contain exactly {sorted(required_sections)}")
             return config
@@ -299,7 +299,7 @@ def setup_single_process(repo_root, process, dry_run=False):
 def find_latest_by_name(uri, destination, preserve_folder=False):
     """
     Find the most recent file or folder at an S3 URI path and return the updated URI and destination path.
-    This is completed by looking at the name of file file/folder so using YYYMMDD in naming is advised.
+    This is completed by looking at the name of file/folder so using YYYMMDD in naming is advised.
 
     :param uri: S3 URI to search
     :type uri: str
