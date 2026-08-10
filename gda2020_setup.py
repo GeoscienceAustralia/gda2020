@@ -294,6 +294,14 @@ def setup_single_process(repo_root, process, dry_run=False):
                     shutil.unpack_archive(zip_file, destination_path)
                     print(f"  Unzipped: {zip_file}")
                     Path.unlink(zip_file)
+
+    print()
+    print("Downloading packages:")
+
+    packages = CONFIG[process].get("packages", [])
+
+    download_packages(packages, dry_run)
+
     print()
 
 def find_latest_by_name(uri, destination, preserve_folder=False):
@@ -395,6 +403,38 @@ def aws_download(uri, destination, include=None, recursive=False, most_recent=Fa
             raise RuntimeError("AWS CLI is not installed or not in PATH")
         except:
             raise RuntimeError(f"Downloading failed")
+
+def download_packages(packages, dry_run=False):
+    """
+    Download required packages for python and from a github repo
+
+    :param packages: Packages section of YAML config
+    :type packages: dictionary
+    :param dry_run: If True, show what would be downloaded without downloading files.
+    :type dry_run: bool
+    """
+
+    for package_type, package_list in packages.items():
+
+        # If packages are for python pip install packages
+        if package_type == "python":
+            for package in package_list:
+                if dry_run:
+                    print(f"  Would have downloaded {package}")
+                else:
+                    subprocess.run(["pip", "install", package], check=True)
+                    print(f"  Downloaded {package}")
+
+        # If packages are from git, find and install
+        if package_type == "git":
+            for package in package_list:
+                if dry_run:
+                    print(f"  Would have downloaded {package}")
+                else:
+                    # Put command here to download latest version, likely will need some flags
+                    print(f"  Downloaded {package}")
+
+
 def confirm_clean(processes):
     """
     Confirm with the user before cleaning specified processes.
