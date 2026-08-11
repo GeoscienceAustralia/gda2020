@@ -8,13 +8,26 @@
 # 3. NADJ
 # 4. QAQC
 
-from __future__ import annotations
-
 import argparse
 from pathlib import Path
 import shutil
 import subprocess
+
+REQUIRED_PACKAGES = {
+    "requests": "requests",
+    "PyYAML": "yaml",
+}
+
+# Install required packages if needed
+for package, module in REQUIRED_PACKAGES.items():
+    try:
+        __import__(module)
+    except ImportError:
+        print("Installing requests")
+        subprocess.run(["pip", "install", package], check=True)
+
 import yaml
+import requests
 
 VALID_PROCESSES = ["APREF", "NGCA", "NADJ", "QAQC"]
 
@@ -199,6 +212,24 @@ def setup_processes(repo_root, processes, dry_run=False):
     :type dry_run: bool
     """
     repo_root = repo_root.resolve()
+
+    print()
+    print("Downloading required packages")
+    print()
+
+    # Downlad packages needed for rest of setup to run.
+    for package in ["zip", "unzip"]:
+        subprocess.run(["sudo", "apt", "install", package], check=True)
+        print(f"  Downloaded {package}")
+
+    if shutil.which("aws") is None:
+        subprocess.run(["cd"])
+        subprocess.run(["curl", '"https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"', "-o", '"awscliv2.zip"'], check=True) # Using a link here is a bit dangerous but it is what aws recommends https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+        subprocess.run(["unzip", "awscliv2.zip"], check=True)
+        print("  Downloaded AWS CLI")
+        subprocess.run(["cd", repo_root])
+    else:
+        print("  AWS CLI already downloaded")
 
     print()
     print(f"Repository root: {repo_root}")
@@ -428,11 +459,56 @@ def download_packages(packages, dry_run=False):
         # If packages are from git, find and install
         if package_type == "git":
             for package in package_list:
-                if dry_run:
-                    print(f"  Would have downloaded {package}")
-                else:
-                    # Put command here to download latest version, likely will need some flags
-                    print(f"  Downloaded {package}")
+                download_latest_release(**package, dry_run=dry_run)
+
+def download_latest_release(provider, owner, repo, destination=None, most_recent=True, version=None, include=None, unzip=False, dry_run=False):
+
+    if provider == "github":
+
+        url = f"https://api.github.com/repos/{owner}/{repo}/releases/"
+        assets = "assets"
+        if most_recent:
+            url = url + "latest"
+        elif version is not None:
+            url = url + str(version)
+
+    elif provider == "bitbucket":
+
+        url = f"https://api.bitbucket.org/2.0/repositories/{owner}/{repo}/downloads"
+        assets = "values"
+
+    release = requests.get(url)
+    release.raise_for_status()
+
+    if include:
+        asset = next(
+            (
+                a for a in release.json()[assets]
+                if include in a["name"]
+            ),
+            None,
+        )
+
+        if asset is None:
+            raise ValueError(
+                f"No asset containing '{include}' found"
+            )
+    else:
+        print(release.json()[assets])
+
+    output_path = destination or asset["name"]
+
+    if dry_run:
+        print(f"  Would have downloaded package at {asset["browser_download_url"]}")
+    else:
+        with requests.get(asset["browser_download_url"], stream=True) as r:
+            r.raise_for_status()
+            with open(output_path, "wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+
+    return output_path
+
 
 
 def confirm_clean(processes):
