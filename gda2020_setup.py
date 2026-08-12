@@ -427,13 +427,13 @@ def aws_download(uri, destination, include=None, recursive=False, most_recent=Fa
             ])
 
         try:
-            subprocess.run(cmd, check=True, capture_output=True, text=True)
+            subprocess.run(cmd, check=True, text=True, stderr=subprocess.PIPE)
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(f"  Download failed: {e.stderr}")
+            raise RuntimeError(f"Download failed: {e.stderr}")
         except FileNotFoundError:
             raise RuntimeError("AWS CLI is not installed or not in PATH")
-        except:
-            raise RuntimeError(f"Downloading failed")
+        except Exception as e:
+            raise RuntimeError(f"Downloading failed: {e}")
 
 def download_packages(packages, dry_run=False):
     """
