@@ -463,6 +463,7 @@ def download_packages(packages, dry_run=False):
 
 def download_latest_release(provider, owner, repo, destination=None, most_recent=True, version=None, include=None, unzip=False, dry_run=False):
 
+    # Create URL depending on provider
     if provider == "github":
 
         url = f"https://api.github.com/repos/{owner}/{repo}/releases/"
@@ -476,39 +477,65 @@ def download_latest_release(provider, owner, repo, destination=None, most_recent
 
         url = f"https://api.bitbucket.org/2.0/repositories/{owner}/{repo}/downloads"
         assets = "values"
+        print( f"Bitbucket is currently not supported! Please manually download {repo}")
+        return
 
+    # Get API results
     release = requests.get(url)
     release.raise_for_status()
 
-    if include:
-        asset = next(
-            (
-                a for a in release.json()[assets]
-                if include in a["name"]
-            ),
-            None,
+    files = []
+
+    # Find all files to be downloaded
+    for asset in release.json()[assets]:
+        if include is None or include in asset["name"]:
+            files.append(asset)
+
+    if len(files) == 0:
+        raise ValueError(
+            f"No files found to download at {url}"
         )
 
-        if asset is None:
-            raise ValueError(
-                f"No asset containing '{include}' found"
-            )
-    else:
-        print(release.json()[assets])
+    # Iterate through each file to be downloaded
+    for file in files:
+        output_path = Path(destination) / file["name"] if destination else Path(file["name"])
 
-    output_path = destination or asset["name"]
+        # Check if file already exists
+        if unzip:
+            output_path_unzipped = output_path.with_suffix("")
+            if output_path_unzipped.is_dir():
+                print(f"  {output_path_unzipped} already exists")
+                continue               
+        else:
+            if output_path.is_file():
+                print(f"  {output_path} already exists")
+                continue
 
-    if dry_run:
-        print(f"  Would have downloaded package at {asset["browser_download_url"]}")
-    else:
-        with requests.get(asset["browser_download_url"], stream=True) as r:
-            r.raise_for_status()
-            with open(output_path, "wb") as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    f.write(chunk)
+        # Download files unless dry run is set
+        if dry_run:
+            print(f"  Would have downloaded package at {file["browser_download_url"]}")
+        else:
+            
+            with requests.get(file["browser_download_url"], stream=True) as r:
+                r.raise_for_status()
+
+                with open(output_path, "wb") as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
+
+            print(f"  Downloaded package at {file["browser_download_url"]}")
+
+            # If needed unzip file
+            if unzip:
+                try:
+                    print(f"  Unzipping {output_path}")
+                    shutil.unpack_archive(output_path)
+                    print(f"  Unzipped {output_path}")
+                    Path.unlink(output_path)
+                except:
+                    raise RuntimeError(f"Failed to unzip {output_path}")
 
     return output_path
-
 
 
 def confirm_clean(processes):
