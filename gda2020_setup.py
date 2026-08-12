@@ -459,10 +459,32 @@ def download_packages(packages, dry_run=False):
         # If packages are from git, find and install
         if package_type == "git":
             for package in package_list:
-                download_latest_release(**package, dry_run=dry_run)
+                download_git_package(**package, dry_run=dry_run)
 
-def download_latest_release(provider, owner, repo, destination=None, most_recent=True, version=None, include=None, unzip=False, dry_run=False):
+def download_git_package(provider, owner, repo, destination=None, most_recent=True, version=None, include=None, unzip=False, dry_run=False):
+    """
+    Downloads git package that has tags. Will either grabs latest release or version given.
+    Doesnt currently only works for public github repos
 
+    :param provider: Either github or bitbucket depending on git host
+    :type provider: str
+    :param owner: Owner of repo eg GeoscienceAustralia
+    :type owner: str
+    :param repo: Name of repo eg dynadjust
+    :type repo: str
+    :param destination: Path when package should be downloaded
+    :type destination: str or Path
+    :param most_recent: If True, download only the most recent release.
+    :type most_recent: bool
+    :param version: Name of release to be downloaded
+    :type version: str
+    :param include: Pattern to include specific files.
+    :type include: str
+    :param unzip: Wether to unzip downloaded files
+    :type unzip: bool
+    :param dry_run: If True, show what would be downloaded without downloading files.
+    :type dry_run: bool    
+    """
     # Create URL depending on provider
     if provider == "github":
 
@@ -479,6 +501,9 @@ def download_latest_release(provider, owner, repo, destination=None, most_recent
         assets = "values"
         print( f"Bitbucket is currently not supported! Please manually download {repo}")
         return
+
+    else:
+        raise ValueError(f"Provider must be either github or bitbucket for {repo}")
 
     # Get API results
     release = requests.get(url)
