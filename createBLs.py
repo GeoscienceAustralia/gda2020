@@ -60,16 +60,21 @@ HISTORY:
             - Updated to python3 and to run on AWS
 '''
 
-import sys, os, datetime, re 
+import sys, os, datetime, re
 from glob import glob
 from numpy import matrix, zeros, copy
 from shutil import rmtree
 from pathlib import Path
 
-# Move to jurisdiction's directory
-d = os.getcwd() 
+# ROOT directory (default to ~/GA if not set)
+ROOT = Path(os.path.expandvars(os.environ.get("ROOT", str(Path.home() / "GA"))))
+
+# Get jurisdiction from current directory path
+d = os.getcwd()
 jur = d.split('/')[-2]
-os.chdir(f'{Path.home()}/ngca/' + jur)
+
+# Work in current directory (expects to be run from jurisdiction directory)
+# ga-post-ngca sets the working directory appropriately
 
 # Check that the necessary directories exist
 if not os.path.isdir('rinexantls'):
@@ -90,7 +95,7 @@ os.mkdir('baselines/')
 # Read in the discontinuity information for renaming purposes
 disconts = {}
 stnsWdiscont = set()
-for discontFile in glob(f'{Path.home()}/apref/apref*.disconts'):
+for discontFile in glob(str(ROOT / 'apref' / 'apref*.disconts')):
     pass
 for line in open(discontFile):
     if line[4] == '_':

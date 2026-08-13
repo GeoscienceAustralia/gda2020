@@ -8,11 +8,14 @@ import  os
 import glob
 from pathlib import Path
 
+# ROOT directory (default to ~/GA if not set)
+ROOT = Path(os.path.expandvars(os.environ.get("ROOT", str(Path.home() / "GA"))))
+
 # Define the jurisdictions
 jurisdictions = ['nsw', 'act', 'vic', 'tas', 'sa', 'wa', 'nt', 'qld']
 
-# Move to the translation tables directory and delete the contents 
-os.chdir(f'{Path.home()}/transTables')
+# Move to the translation tables directory and delete the contents
+os.chdir(ROOT / 'transTables')
 for f in os.listdir('.'):
     os.remove(f)
 

@@ -9,16 +9,21 @@ from pathlib import Path
 import shutil
 import geodepy.gnss
 
-# Move to the SINEX directory
-d = os.getcwd() 
+# ROOT directory (default to ~/GA if not set)
+ROOT = Path(os.path.expandvars(os.environ.get("ROOT", str(Path.home() / "GA"))))
+
+# Get jurisdiction from current directory path
+d = os.getcwd()
 j = d.split('/')[-2]
-os.chdir(f'{Path.home()}/ngca/' + j + '/sinexFiles')
+
+# Work in current directory (expects to be run from sinexFiles directory)
+# ga-post-ngca sets the working directory appropriately
 
 # Create a list of the APREF stations that are used as constraints, that is,
 # those that have more than 2 years of data
 go = 0
 constraints = []
-for f in glob(f'{Path.home()}/apref/apref*.snx'):
+for f in glob(str(ROOT / 'apref' / 'apref*.snx')):
     aprefSol = f
 f = open(aprefSol)
 for line in f:

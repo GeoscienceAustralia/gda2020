@@ -1,7 +1,7 @@
 OBJS = sinex2epoch.o geodetic.o matrix.o time.o
 CC = gcc
 #CFLAGS = -Wall -Ofast
-CFLAGS = -Wall 
+CFLAGS = -Wall -static -B/g/data/ms9/.envbin/glibc-static/lib -I${ENV_PATH}/glibc-static/include -L${ENV_PATH}/glibc-static/lib
 
 sinex2epoch: $(OBJS) sinex2epoch.h
 	$(CC) $(CFLAGS) $(OBJS) -o sinex2epoch -lm

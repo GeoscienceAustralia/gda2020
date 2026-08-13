@@ -24,11 +24,13 @@ import os
 import sys
 import pandas as pd
 import numpy as np
+from pathlib import Path
 from geodepy import gnss, transform, constants, convert
 
-# Directory
-os.chdir('../sinexFiles')
+# ROOT directory (default to ~/GA if not set)
+ROOT = Path(os.path.expandvars(os.environ.get("ROOT", str(Path.home() / "GA"))))
 
+# Work in current directory (ga-post-ngca sets cwd appropriately)
 # Input file
 for f in glob.glob('*.SNX'):
 
