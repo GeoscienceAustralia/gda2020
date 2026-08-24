@@ -12,7 +12,7 @@ import geodepy.gnss
 # Move to the SINEX directory
 d = os.getcwd() 
 j = d.split('/')[-2]
-os.chdir(f'{Path.home()}/ngca/' + j + '/sinexFiles')
+os.chdir('../sinexFiles')
 
 # Create a list of the APREF stations that are used as constraints, that is,
 # those that have more than 2 years of data
