@@ -12,6 +12,11 @@ import argparse
 from pathlib import Path
 import shutil
 import subprocess
+import os
+
+if shutil.which("pip") is None:
+    subprocess.run(["sudo", "apt", "update"], check=True)
+    subprocess.run(["sudo", "apt", "install", "-y", "python3-pip"], check=True)
 
 REQUIRED_PACKAGES = {
     "requests": "requests",
@@ -223,11 +228,13 @@ def setup_processes(repo_root, processes, dry_run=False):
         print(f"  Downloaded {package}")
 
     if shutil.which("aws") is None:
-        subprocess.run(["cd"])
-        subprocess.run(["curl", '"https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"', "-o", '"awscliv2.zip"'], check=True) # Using a link here is a bit dangerous but it is what aws recommends https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+        os.chdir(os.path.expanduser("~"))
+        subprocess.run(["curl", "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip", "-o", "awscliv2.zip"], check=True) # Using a link here is a bit dangerous but it is what aws recommends https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
         subprocess.run(["unzip", "awscliv2.zip"], check=True)
+        os.remove("awscliv2.zip")
+        subprocess.run(["sudo", "aws/install"])
         print("  Downloaded AWS CLI")
-        subprocess.run(["cd", repo_root])
+        os.chdir(repo_root)
     else:
         print("  AWS CLI already downloaded")
 
@@ -453,8 +460,11 @@ def download_packages(packages, dry_run=False):
                 if dry_run:
                     print(f"  Would have downloaded {package}")
                 else:
-                    subprocess.run(["pip", "install", package], check=True)
-                    print(f"  Downloaded {package}")
+                    try:
+                        subprocess.run(["pip", "install", package], check=True)
+                        print(f"  Downloaded {package}")
+                    except subprocess.CalledProcessError:
+                        raise RuntimeError("Ensure you have a python venv activated")
 
         # If packages are from git, find and install
         if package_type == "git":
