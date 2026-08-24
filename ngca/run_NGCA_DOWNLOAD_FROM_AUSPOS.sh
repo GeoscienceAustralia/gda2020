@@ -9,6 +9,8 @@ JURIS="qld"
 # IP Adress of Geodesy machine (sometimes this changes)
 IP_ADRESS=[IP ADDRESS]
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Commentary
 printf "\nWill run script to copy over files after AUSPOS processing.\n"
 printf "\nYou have chosen to work on ${JURIS^^} for the $ARCHIVE NGCA archive.\n"
@@ -20,7 +22,7 @@ read -p "Hit [ENTER] key if correct, OR [Ctrl C] if you want to abort..."
 
 # Navigate to jurisdiction directory
 printf "\nNavigating to ${JURIS^^} NGCA directory...\n"
-cd ~/ngca/$JURIS
+cd $SCRIPT_DIR/$JURIS
 
 # Copy over SINEX files
 printf "\nCopying over SINEX files...\n"

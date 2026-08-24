@@ -32,7 +32,16 @@ p1 = re.compile(r'\w{8}\.\d{2}o$', re.I)
 
 # Move to the NGCA directory
 print('* Moving to the NGCA directory')
-os.chdir(f'{Path.home()}/ngca/')
+cwd = Path.cwd()
+
+for parent in [cwd, *cwd.parents]:
+    if parent.name == "gda2020":
+        print(parent)
+        os.chdir(parent / "ngca")
+        break
+else:
+    raise RuntimeError("Could not find gda2020 repo root")
+
 
 # Get today's date in the format YYYYMMDD
 today = str(datetime.today())
@@ -61,4 +70,3 @@ for jur in juris:
 
     # Move back up to main directory
     os.chdir('../')
-

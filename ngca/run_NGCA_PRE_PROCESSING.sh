@@ -6,17 +6,17 @@ if [[ -d "$SCRIPT_DIR/scripts" ]] && [[ ":$PATH:" != *":$SCRIPT_DIR/scripts:"* ]
 fi
 
 # Archive date for NGCA processing, e.g. the date on which get_ngca.py has downloaded the NGCA archive contents for the jurisdictions being processed 
-ARCHIVE=20240715
+ARCHIVE=20260824
 
 # List of jurisdictions to run consecutively - increasing number of RINEX
-JURIS_LIST=("tas" "act" "vic" "sa" "nt" "wa" "nsw" "qld")
+#JURIS_LIST=("tas" "act" "vic" "sa" "nt" "wa" "nsw" "qld")
 
 # Alternatively run a single jurisdiction
-#JURIS_LIST=("tas")
+JURIS_LIST=("act")
 
 # Create automatic notes file (removes existing note file - for a full auto_note summary run all juris consecutively)
-rm -f ~/ngca/auto_notes_$ARCHIVE.txt
-touch ~/ngca/auto_notes_$ARCHIVE.txt
+rm -f $SCRIPT_DIR/auto_notes_$ARCHIVE.txt
+touch $SCRIPT_DIR/auto_notes_$ARCHIVE.txt
 
 # Commentary 
 printf "\nRunning script to organise NGCA files up until the stage before AUSPOS processing."
@@ -26,7 +26,7 @@ for JURIS in ${JURIS_LIST[*]}; do
 
     # Navigate to jurisdiction directory
     printf "\nNavigating to ${JURIS^^} archive directory...\n"
-    cd ~/ngca/$JURIS/$ARCHIVE
+    cd $SCRIPT_DIR/$JURIS/$ARCHIVE
 
     # Run verifySub.py
     printf "\nexecuting verifySub.py for ${JURIS^^}...\n"
