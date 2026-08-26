@@ -231,7 +231,6 @@ def setup_processes(repo_root, processes, dry_run=False):
         
         home_dir = os.path.expanduser("~")
         zip_file = os.path.join(home_dir, "awscliv2.zip")
-        print(zip_file)
         
         subprocess.run(["curl", "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip", "-o", zip_file], check=True) # Using a link here is a bit dangerous but it is what aws recommends https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
         subprocess.run(["unzip", zip_file], cwd=home_dir, check=True)

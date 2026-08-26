@@ -6,13 +6,13 @@ if [[ -d "$SCRIPT_DIR/scripts" ]] && [[ ":$PATH:" != *":$SCRIPT_DIR/scripts:"* ]
 fi
 
 # Archive date for NGCA processing, e.g. the date on which get_ngca.py has downloaded the NGCA archive contents for the jurisdictions being processed 
-ARCHIVE=20240715
+ARCHIVE=20260825
 
 # List of jurisdictions to run consecutively - increasing number of RINEX
-JURIS_LIST=("tas" "act" "vic" "sa" "nt" "wa" "nsw" "qld")
+#JURIS_LIST=("tas" "act" "vic" "sa" "nt" "wa" "nsw" "qld")
 
 # Alternatively run a single jurisdiction
-#JURIS_LIST=("tas")
+JURIS_LIST=("tas")
 
 # Commentary 
 printf "\nWill run script to organise NGCA files after the AUSPOS processing.\n"

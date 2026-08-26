@@ -18,13 +18,12 @@ import geodepy.gnss
 
 
 # Copy over gda2020.dat
-os.system('cp ~/apref/workDir/gda2020.dat ../sinexFiles')
+os.system('cp ../../auxiliary_files/gda2020.dat .')
 
 # Create a list of APREF stations to exclude
 exclude = ['MAC1', 'CEDU', 'CA19', 'HOBA', 'CCPL', 'IGWD'];
 
 # Loop over the input SINEX files
-os.chdir('../sinexFiles')
 for f in glob.glob('*.SNX'):
 
     # Use subprocess to run rdsinex and GMT and create a list of stations 

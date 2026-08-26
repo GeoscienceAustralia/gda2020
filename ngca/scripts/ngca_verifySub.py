@@ -30,9 +30,13 @@ logging.basicConfig(
     level = logging.INFO
 )
 
+# Get antenna path
+ngca_path = Path(__file__).resolve().parent.parent
+ant_path = os.path.join(ngca_path, "auxiliary_files", "antTypes.dat")
+
 # Read the supported antennas into a set
 antTypes = set()
-with open(f'{Path.home()}/antTypes.dat', 'r') as f:
+with open(ant_path, 'r') as f:
     for line in f:
         cols = line.split()
         antTypes.add(cols[0])

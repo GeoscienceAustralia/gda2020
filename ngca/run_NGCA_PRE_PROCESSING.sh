@@ -6,13 +6,13 @@ if [[ -d "$SCRIPT_DIR/scripts" ]] && [[ ":$PATH:" != *":$SCRIPT_DIR/scripts:"* ]
 fi
 
 # Archive date for NGCA processing, e.g. the date on which get_ngca.py has downloaded the NGCA archive contents for the jurisdictions being processed 
-ARCHIVE=20260824
+ARCHIVE=20260825
 
 # List of jurisdictions to run consecutively - increasing number of RINEX
 #JURIS_LIST=("tas" "act" "vic" "sa" "nt" "wa" "nsw" "qld")
 
 # Alternatively run a single jurisdiction
-JURIS_LIST=("act")
+JURIS_LIST=("tas")
 
 # Create automatic notes file (removes existing note file - for a full auto_note summary run all juris consecutively)
 rm -f $SCRIPT_DIR/auto_notes_$ARCHIVE.txt
@@ -44,7 +44,7 @@ for JURIS in ${JURIS_LIST[*]}; do
     NumRINEX=$(ls *.*O | wc -l)
 
     # Write number of jobs to a notes file"
-    echo "${JURIS^^} has $NumRINEX RINEX and $NumJobs jobs" >> ~/ngca/auto_notes_$ARCHIVE.txt
+    echo "${JURIS^^} has $NumRINEX RINEX and $NumJobs jobs" >> $SCRIPT_DIR/auto_notes_$ARCHIVE.txt
 
     # Commentary
     printf "\nFinished working on ${JURIS^^}\n"

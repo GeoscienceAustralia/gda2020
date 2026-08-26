@@ -9,17 +9,36 @@ from pathlib import Path
 import shutil
 import geodepy.gnss
 
-# Move to the SINEX directory
 d = os.getcwd() 
 j = d.split('/')[-2]
-os.chdir('../sinexFiles')
+ngca_dir = Path(__file__).resolve().parents[1]
 
 # Create a list of the APREF stations that are used as constraints, that is,
 # those that have more than 2 years of data
 go = 0
 constraints = []
-for f in glob(f'{Path.home()}/apref/apref*.snx'):
-    aprefSol = f
+
+#Reading Apref from folder with checks
+apref_dirs = list(ngca_dir.glob("APREF*"))
+
+if len(apref_dirs) == 0:
+    raise FileNotFoundError(f"No APREF folder found in {ngca_dir}")
+
+if len(apref_dirs) > 1:
+    raise RuntimeError(f"Expected one APREF directory, found {len(apref_dirs)}: {apref_dirs}")
+
+apref_dir = apref_dirs[0]
+
+apref_sols = list(apref_dir.glob("apref*.snx"))
+
+if len(apref_sols) == 0:
+    raise FileNotFoundError(f"No apref*.snx file found in {apref_sols}")
+
+if len(apref_sols) > 1:
+    raise RuntimeError(f"Expected one apref.snx file, found {len(apref_sols)}: {apref_sols}")  
+
+aprefSol = apref_sols[0]  
+
 f = open(aprefSol)
 for line in f:
     if line[0:8] == '-SITE/ID':
