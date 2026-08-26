@@ -6,10 +6,9 @@
 # Import modules
 import argparse
 import re
-import os
-import glob
 from datetime import datetime
-from pathlib import Path
+from ngca_path import NGCA_DIR
+import subprocess
 
 
 # Create an ArgumentParser object
@@ -30,19 +29,6 @@ else:
 # Compile regular expressions
 p1 = re.compile(r'\w{8}\.\d{2}o$', re.I)
 
-# Move to the NGCA directory
-print('* Moving to the NGCA directory')
-cwd = Path.cwd()
-
-for parent in [cwd, *cwd.parents]:
-    if parent.name == "gda2020":
-        print(parent)
-        os.chdir(parent / "ngca")
-        break
-else:
-    raise RuntimeError("Could not find gda2020 repo root")
-
-
 # Get today's date in the format YYYYMMDD
 today = str(datetime.today())
 archiveDate = today[0:10].replace('-','')
@@ -51,22 +37,23 @@ archiveDate = today[0:10].replace('-','')
 for jur in juris:
     print('* Processing ' + jur.upper())
 
-    # Create the archive directory and move to it
-    os.mkdir(jur + '/' + archiveDate)
-    os.chdir(jur + '/' + archiveDate)
+    # Create the archive directory
+    archive_dir = NGCA_DIR / jur / archiveDate
+    archive_dir.mkdir(parents=True, exist_ok=True)
 
     # Download the files
     print('* Downloading files')
-    os.system('aws s3 cp s3://gda2020-ngca/ngca/' + jur.lower() + \
-            ' . --quiet --recursive --include "*"')
+
+    subprocess.run(["aws", "s3", "cp", 
+                    f"s3://gda2020-ngca/ngca/{jur.lower()}/" ,
+                    archive_dir, "--quiet", "--recursive"], check=True
+                   )
 
     # Deleting old data
     print('* Deleting old SINEX files and RINEX antenna information files')
-    os.chdir('../')
-    for cluster in glob.glob('rinexantls/*'):
-        os.remove(cluster)
-    for snxFile in glob.glob('sinexFiles/*') :
-        os.remove(snxFile)
+        
+    for folder in ["rinexantls", "sinexFiles"]:
+        ngca_fold_path = NGCA_DIR / jur / folder
 
-    # Move back up to main directory
-    os.chdir('../')
+        for item in ngca_fold_path.iterdir():
+            item.unlink()
