@@ -19,10 +19,10 @@ headers and the log file lists all the RINEX files that were deleted
 
 import logging
 import re
-import os
 import datetime
 import statistics
 from pathlib import Path
+from ngca_path import NGCA_DIR
 
 # Set up logging
 logging.basicConfig(
@@ -31,8 +31,7 @@ logging.basicConfig(
 )
 
 # Get antenna path
-ngca_path = Path(__file__).resolve().parent.parent
-ant_path = os.path.join(ngca_path, "auxiliary_files", "antTypes.dat")
+ant_path = NGCA_DIR / "auxiliary_files" / "antTypes.dat"
 
 # Read the supported antennas into a set
 antTypes = set()
@@ -64,9 +63,9 @@ fout1 = open('RinexAntLs.txt', 'w')
 fout2 = open('durations.dat', 'w')
 stns = set()
 num_rnx = 0
-files = os.listdir('.')
+files = list(Path(".").iterdir())
 for f in sorted(files):
-    if p1.match(f):
+    if p1.match(f.name):
         epochs = []
         deltas = []
         version = False
@@ -93,7 +92,7 @@ for f in sorted(files):
                     antDome = line[20:40].strip()
                     ant = antDome.split()[0]
                     if ant not in antTypes:
-                        logging.info(f + ': unsupported antenna type')
+                        logging.info(f"{f.name} : unsupported antenna type")
                         good = False
                         break
             
@@ -103,7 +102,7 @@ for f in sorted(files):
                     height = True
                     height = line[0:14].strip()
                     if not p5.match(height):
-                        logging.info(f + ': antenna heights must be a number')
+                        logging.info(f"{f.name} : antenna heights must be a number")
                         good = False
                         break
             
@@ -145,14 +144,14 @@ for f in sorted(files):
         # Check that the RINEX file does not start before the IGS products do,
         # 1 June 1994i
         if good and epochs[0] < igs_start:
-            logging.info(f + ': no IGS products available')
+            logging.info(f"{f.name} : no IGS products available")
             good = False
 
         # Check that the DOY in file name is right
         if good:
             doy = epochs[0].strftime('%j')
-            if f[4:7] != doy:
-                logging.info(f + ': incorrect DOY in RINEX file name')
+            if f.name[4:7] != doy:
+                logging.info(f"{f.name} : incorrect DOY in RINEX file name")
                 good = False
 
         # Calculate the sampling interval
@@ -171,39 +170,38 @@ for f in sorted(files):
             duration = len(deltas) * sampling
             # 05:59:00 hours in seconds
             if duration < 21540:
-                logging.info(f + ': RINEX duration is less than 6 hours ('
-                             + str(duration) + ')')
+                logging.info(f"{f.name} : RINEX duration is less than 6 hours ({duration})")
                 good = False
             # 48 hours in seconds    
             if duration > 172800:
-                logging.info(f + ': RINEX duration is greater than 48 hours ('
-                             + str(duration) + ')')
+                logging.info(f"{f.name} : RINEX duration is greater than 48 hours ({duration})")
                 good = False
         
         # If the file has passed all the checks write to RinexAntLs.txt
         if good:
-            os.rename(f, f.upper())
-            stns.add(f.upper()[0:4])
+            f = f.rename(f.with_name(f.name.upper()))
+            stns.add(f.name[0:4])
             num_rnx += 1
-            fout1.write(f.upper() + ' ' + ant + ' ' + height + '\n')
+            fout1.write(f"{f.name} {ant} {height}\n")
         
             # Write out: file name, start epoch, end epoch, duration, excess
             l = '{:12s} {} {} {:6d}\n'.\
-                format(f.upper(), epochs[0], epochs[-1], int(duration))
+                format(f.name, epochs[0], epochs[-1], int(duration))
             fout2.write(l)
         else:
-            os.remove(f)
+            f.unlink()
 
     # Remove if not a RINEX or if the RINEX name is not correctly formed
-    elif f not in ['RinexAntLs.txt', 'verifySub.log', 'durations.dat']:
-        logging.info(f + ': non-RINEX file or bad NGCA RINEX file name')
-        os.remove(f)
+    elif f.is_file() and f.name not in ['RinexAntLs.txt', 'verifySub.log', 'durations.dat']:
+        logging.info(f"{f.name} : non-RINEX file or bad NGCA RINEX file name")
+        f.unlink()
 fout1.close()
 fout2.close()
 
 # Delete verifySub.log if empty
-if os.stat('verifySub.log').st_size == 0:
-    os.remove('verifySub.log')
+log_file = Path("verifySub.log")
+if log_file.is_file() and log_file.stat().st_size == 0:
+    log_file.unlink()
 
 # Print stats to the screen
 print('There are ' + str(num_rnx) + ' RINEX files and ' + str(len(stns)) +

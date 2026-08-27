@@ -6,7 +6,7 @@ if [[ -d "$SCRIPT_DIR/scripts" ]] && [[ ":$PATH:" != *":$SCRIPT_DIR/scripts:"* ]
 fi
 
 # Archive date for NGCA processing, e.g. the date on which get_ngca.py has downloaded the NGCA archive contents for the jurisdictions being processed 
-ARCHIVE=20260825
+ARCHIVE=20260827
 
 # List of jurisdictions to run consecutively - increasing number of RINEX
 #JURIS_LIST=("tas" "act" "vic" "sa" "nt" "wa" "nsw" "qld")
@@ -14,13 +14,21 @@ ARCHIVE=20260825
 # Alternatively run a single jurisdiction
 JURIS_LIST=("tas")
 
+# Commentary 
+printf "\nRunning script to download and organise NGCA files before AUSPOS processing."
+printf "\nWill be working on these jurisdictions: ${JURIS_LIST[*]^^}, for the $ARCHIVE NGCA archive."
+
+printf "\nDownloading NGCA files into the $ARCHIVE NGCA archive.\n"
+
+output=$(ngca_get.py -j "${JURIS_LIST[@]}")
+
+ARCHIVE=$(printf '%s\n' "$output" | head -n1)
+
+printf '%s\n' "$output" | tail -n +2
+
 # Create automatic notes file (removes existing note file - for a full auto_note summary run all juris consecutively)
 rm -f $SCRIPT_DIR/auto_notes_$ARCHIVE.txt
 touch $SCRIPT_DIR/auto_notes_$ARCHIVE.txt
-
-# Commentary 
-printf "\nRunning script to organise NGCA files up until the stage before AUSPOS processing."
-printf "\nWill be working on these jurisdictions: ${JURIS_LIST[*]^^}, for the $ARCHIVE NGCA archive."
 
 for JURIS in ${JURIS_LIST[*]}; do
 

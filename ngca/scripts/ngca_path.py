@@ -15,4 +15,3 @@ REPO_ROOT = find_repo_root()
 # ---- Directories ------------------------------------------------------------
 
 NGCA_DIR = REPO_ROOT / "ngca"
-NGCA_

@@ -6,14 +6,15 @@ automatic processing
 # renameless 20251111 - removing provisions for renaming of files.
 
 import re
-import os
 import datetime
+from pathlib import Path
 
 # Compile the regular expressions
 p1 = re.compile(r'^\w{8}\.\d{2}o$', re.I)
 
 # Create the directory for the individual RINEX antenna information files
-os.mkdir('rinexantls')
+antls_dir = Path('rinexantls')
+antls_dir.mkdir(exist_ok=True)
 
 # Rename files that don't have a '0' before the extension. If renaming will
 # cause a name conflict then rename totally
@@ -110,13 +111,17 @@ while sorted_rnx:
         
     # Open the cluster RINEX antemnna information file
     rnxantls = rnx0[9:11] + rnx0[4:7] + '_ls'
-    if os.path.isfile(rnxantls):
+    
+    rnxantls = Path(rnxantls)
+    
+    if rnxantls.is_file():
         conflict = True
         filenum = 0
         while conflict:
             filenum += 1
-            rnxantls = rnxantls[:5] + str(filenum) + '_ls'
-            if not os.path.isfile(rnxantls):
+            rnxantls = rnxantls.with_name(rnxantls.name[:5] + f"{filenum}_ls")
+            
+            if not rnxantls.is_file():
                 conflict = False
     fout = open(rnxantls, 'w')
 
@@ -141,7 +146,8 @@ while sorted_rnx:
     fout.close()
 
 # Move antenna information files to rinexantls/
-os.system('mv *_ls rinexantls')
+for file in Path(".").glob("*_ls"):
+    file.rename(antls_dir / file.name)
 
 # Delete nameChanges.dat if empty
 # v2 - do not check / delete
