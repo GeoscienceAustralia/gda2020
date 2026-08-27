@@ -5,9 +5,6 @@ if [[ -d "$SCRIPT_DIR/scripts" ]] && [[ ":$PATH:" != *":$SCRIPT_DIR/scripts:"* ]
     export PATH="$PATH:$SCRIPT_DIR/scripts"
 fi
 
-# Archive date for NGCA processing, e.g. the date on which get_ngca.py has downloaded the NGCA archive contents for the jurisdictions being processed 
-ARCHIVE=20260827
-
 # List of jurisdictions to run consecutively - increasing number of RINEX
 #JURIS_LIST=("tas" "act" "vic" "sa" "nt" "wa" "nsw" "qld")
 
