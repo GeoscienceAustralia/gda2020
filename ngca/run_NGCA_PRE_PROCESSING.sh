@@ -1,6 +1,7 @@
 #!/usr/bin/bash
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 if [[ -d "$SCRIPT_DIR/scripts" ]] && [[ ":$PATH:" != *":$SCRIPT_DIR/scripts:"* ]]; then
     export PATH="$PATH:$SCRIPT_DIR/scripts"
 fi
@@ -8,20 +9,45 @@ fi
 # List of jurisdictions to run consecutively - increasing number of RINEX
 #JURIS_LIST=("tas" "act" "vic" "sa" "nt" "wa" "nsw" "qld")
 
-# Alternatively run a single jurisdiction
-JURIS_LIST=("tas")
+# Parse jurisdiction flag
+JURIS_LIST=()
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -j|--juris)
+            shift
+            while [[ $# -gt 0 && ! "$1" =~ ^- ]]; do
+                JURIS_LIST+=("${1,,}")   # force lowercase
+                shift
+            done
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: $0 -j tas act nsw"
+            exit 1
+            ;;
+    esac
+done
+
+# Use all jurisdictions if none specified
+if [[ ${#JURIS_LIST[@]} -eq 0 ]]; then
+    JURIS_LIST=("tas" "act" "vic" "sa" "nt" "wa" "nsw" "qld")
+fi
 
 # Commentary 
 printf "\nRunning script to download and organise NGCA files before AUSPOS processing."
 printf "\nWill be working on these jurisdictions: ${JURIS_LIST[*]^^}, for the $ARCHIVE NGCA archive."
 
-printf "\nDownloading NGCA files into the $ARCHIVE NGCA archive.\n"
+printf "\nDownloading NGCA files into the NGCA archive.\n"
 
-output=$(ngca_get.py -j "${JURIS_LIST[@]}")
-
-ARCHIVE=$(printf '%s\n' "$output" | head -n1)
-
-printf '%s\n' "$output" | tail -n +2
+while IFS= read -r line; do
+    if [[ -z "${ARCHIVE:-}" ]]; then
+        ARCHIVE="$line"
+    else
+        printf '%s\n' "$line"
+    fi
+done < <(PYTHONUNBUFFERED=1 ngca_get.py -j "${JURIS_LIST[@]}")
 
 # Create automatic notes file (removes existing note file - for a full auto_note summary run all juris consecutively)
 rm -f $SCRIPT_DIR/auto_notes_$ARCHIVE.txt

@@ -161,8 +161,7 @@ for f in sorted(files):
                 deltas.append(delta_t.seconds)
             sampling = statistics.median(deltas)
             if sampling != 30:
-                logging.info(f + ': incorrect sampling (' +
-                             str(sampling) + ')')
+                logging.info(f"{f.name} : incorrect sampling ({sampling})")
                 good = False
         
         # Calculate the duration of the RINEX file
@@ -170,11 +169,11 @@ for f in sorted(files):
             duration = len(deltas) * sampling
             # 05:59:00 hours in seconds
             if duration < 21540:
-                logging.info(f"{f.name} : RINEX duration is less than 6 hours ({duration})")
+                logging.info(f"{f.name} : RINEX duration is less than 6 hours ({duration/3600:.2f})")
                 good = False
             # 48 hours in seconds    
             if duration > 172800:
-                logging.info(f"{f.name} : RINEX duration is greater than 48 hours ({duration})")
+                logging.info(f"{f.name} : RINEX duration is greater than 48 hours ({duration/3600:.2f})")
                 good = False
         
         # If the file has passed all the checks write to RinexAntLs.txt
