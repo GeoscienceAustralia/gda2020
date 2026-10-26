@@ -2,9 +2,7 @@
 
 """Check the jurisdicitonal translation tables for duplicates"""
 
-import glob
-import os
-from pathlib import Path
+from ngca_path import NGCA_APREF_DIR, NGCA_TRANS_TABLES_DIR
 
 # Create lists of stations and 4-character IDs to ignore
 ignoreStns = ['6635/ 1199', '6626/ 1035', '6429/ 2959', '6731/ 1089',
@@ -34,11 +32,11 @@ ignoreStns = ['6635/ 1199', '6626/ 1035', '6429/ 2959', '6731/ 1089',
         '6428/ 2214', '6426/ 1319', '6428/ 1097', '6631/ 2025', '6629/ 7911',
         '6433/ 2350', '6728/ 1000']
 
-# Read in the APREF station names
-for file in glob.glob(f'{Path.home()}/apref/apref*.disconts'):
-    aprefFile = file
+# Read in the APREF station names     
+for disconts in NGCA_APREF_DIR.glob('apref*.disconts'):
+    discontsFile = disconts
 aprefStns = set()
-for line in open(aprefFile):
+for line in open(discontsFile):
     if line[0:1] != '#':
         aprefStns.add(line[0:4])
 
@@ -48,10 +46,10 @@ allIds = {}
 allStns = {}
 trans1 = {}
 trans2 = {}
-os.chdir(f'{Path.home()}/transTables')
-for file in glob.glob('*.csv'):
-    print('Checking ' + file + '...')
-    state = file[0:2]
+
+for file in NGCA_TRANS_TABLES_DIR.glob('*.csv'):
+    print('Checking ' + file.name + '...')
+    state = file.name[0:2]
     if state == 'vi':
         state = 'vic'
     elif state == 'ns':
@@ -110,6 +108,7 @@ for file in glob.glob('*.csv'):
             if key not in ignoreStns:
                 str = ' '.join(value)
                 print(key + ': ' + str)
+
 print('Checking as a whole...')
 good = True
 for key, values in allIds.items():
@@ -130,4 +129,5 @@ for key, values in allStns.items():
             str = ' '.join(value)
             print(key + ': ' + str)
             good = False
+
 print('All good!')

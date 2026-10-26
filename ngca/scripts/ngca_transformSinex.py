@@ -19,21 +19,26 @@
 # SETUP
 
 # Packages
-import glob
-import os
 from geodepy import gnss, transform, constants, convert
+from ngca_path import NGCA_DIR
+import argparse
+from shutil import copy2
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-j", "--juris", required=True, help="Jurisdiction to process")
+
+args = parser.parse_args()
 
 # Directory
-os.chdir('../sinexFiles')
+SINEX_DIR = NGCA_DIR / args.juris.lower() / 'sinexFiles'
 
 # Input file
-for f in glob.glob('*.SNX'):
-
-    ifile = f
-
-    # Copy original file to new name
-    new_name = ifile.split('.')[0]
-    os.system('cp ./' + ifile + ' ./' + new_name + '.ITRF2020')
+for ifile in SINEX_DIR.glob('*.SNX'):
+    
+    new_file = ifile.with_name(ifile.name + '.ITRF2014')
+    
+    copy2(ifile, new_file)
 
     ## ===
     # READ SINEX BLOCKS
@@ -53,38 +58,38 @@ for f in glob.glob('*.SNX'):
     # - SOLUTION/MATRIX_APRIORI
 
     # Header
-    snx_header = gnss.read_sinex_header_line(ifile)
+    snx_header = gnss.read_sinex_header_line(new_file)
 
     # FILE/REFERENCE
-    snx_fileReference = gnss.read_sinex_file_reference_block(ifile)
+    snx_fileReference = gnss.read_sinex_file_reference_block(new_file)
 
     # INPUT/ACKNOWLEDGMENTS
-    snx_inputAcknowledgements = gnss.read_sinex_input_acknowledgments_block(ifile)
+    snx_inputAcknowledgements = gnss.read_sinex_input_acknowledgments_block(new_file)
     
     # SOLUTION/STATISTICS
-    snx_solnStatistics = gnss.read_sinex_solution_statistics_block(ifile)
+    snx_solnStatistics = gnss.read_sinex_solution_statistics_block(new_file)
 
     # SITE/ID
-    snx_siteID = gnss.read_sinex_site_id_block(ifile)
+    snx_siteID = gnss.read_sinex_site_id_block(new_file)
 
     # SITE/RECEIVER
-    snx_siteReceiver = gnss.read_sinex_site_receiver_block(ifile)
+    snx_siteReceiver = gnss.read_sinex_site_receiver_block(new_file)
 
     # SITE/ANTENNA
-    snx_siteAntenna = gnss.read_sinex_site_antenna_block(ifile)
+    snx_siteAntenna = gnss.read_sinex_site_antenna_block(new_file)
 
     # SITE/GPS_PHASE_CENTER
-    snx_siteGpsPhaseCenter = gnss.read_sinex_site_gps_phase_center_block(ifile)
+    snx_siteGpsPhaseCenter = gnss.read_sinex_site_gps_phase_center_block(new_file)
 
     # SITE/ECCENTRICITY
-    snx_siteEccentricity = gnss.read_sinex_site_eccentricity_block(ifile)
+    snx_siteEccentricity = gnss.read_sinex_site_eccentricity_block(new_file)
 
     # SOLUTION/EPOCHS
-    snx_solnEpochs = gnss.read_sinex_solution_epochs_block(ifile)
+    snx_solnEpochs = gnss.read_sinex_solution_epochs_block(new_file)
 
     # SOLUTION/ESTIMATE 
     # - dataframe
-    df_solnEstimate = gnss.sinex2dataframe_solution_estimate(ifile)
+    df_solnEstimate = gnss.sinex2dataframe_solution_estimate(new_file)
     
     # Obtain the solution epoch
     # - used later in transformation
@@ -100,13 +105,13 @@ for f in glob.glob('*.SNX'):
 
     # SOLUTION/APRIORI
     # - dataframe
-    df_solnApriori = gnss.sinex2dataframe_solution_apriori(ifile)
+    df_solnApriori = gnss.sinex2dataframe_solution_apriori(new_file)
 
     # SOLUTION/MATRIX_ESTIMATE
-    snx_block_solnMatrixEstimate = gnss.read_sinex_solution_matrix_estimate_block(ifile)
+    snx_block_solnMatrixEstimate = gnss.read_sinex_solution_matrix_estimate_block(new_file)
 
     # SOLUTION/MATRIX_APRIORI
-    snx_block_solnMatrixApriori = gnss.read_sinex_solution_matrix_apriori_block(ifile)
+    snx_block_solnMatrixApriori = gnss.read_sinex_solution_matrix_apriori_block(new_file)
 
     ## ===
     # TRANSFORM COORDINATES (Solution Estimate)
@@ -215,7 +220,7 @@ for f in glob.glob('*.SNX'):
 
     # Write SINEX 
     gnss.writeSINEX(
-                    ifile,
+                    new_file,
                     header=snx_header,
                     fileReference=snx_fileReference, 
                     inputAcknowledgments=snx_inputAcknowledgements, 
@@ -231,7 +236,3 @@ for f in glob.glob('*.SNX'):
                     solutionMatrixEstimate=snx_block_solnMatrixEstimate,
                     solutionMatrixApriori=snx_block_solnMatrixApriori,
     )
-
-# Remove ITRF2020 SINEX files
-for f in glob.glob('*.ITRF2020'):
-    os.remove(f)

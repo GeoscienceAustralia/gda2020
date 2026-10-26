@@ -26,7 +26,7 @@ HISTORY:
             - Fixed several bugs
     0.04    2013-09-10  Craig Harrison
             - Equation for creating baselines corrected
-            - i.e., \Delta x_{12} = x_2 - x_1 NOT x_1 - x_2
+            - i.e., Delta x_{12} = x_2 - x_1 NOT x_1 - x_2
     1.00    2015-01-16  Craig Harrison
             - Major re-write
             - Code renamed from sinex2dynaXML.py to createBLs.py
@@ -60,37 +60,44 @@ HISTORY:
             - Updated to python3 and to run on AWS
 '''
 
-import sys, os, datetime, re 
-from glob import glob
+import datetime, re 
 from numpy import matrix, zeros, copy
 from shutil import rmtree
-from pathlib import Path
+from ngca_path import NGCA_DIR, NGCA_APREF_DIR
+import argparse
 
-# Move to jurisdiction's directory
-d = os.getcwd() 
-jur = d.split('/')[-2]
-os.chdir(f'{Path.home()}/ngca/' + jur)
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-j", "--juris", required=True, help="Jurisdiction to process")
+
+args = parser.parse_args()
+
+# Directory
+JURIS_DIR = NGCA_DIR / args.juris.lower()
+SINEX_DIR = NGCA_DIR / args.juris.lower() / 'sinexFiles'
+RINEXANTLS_DIR = NGCA_DIR / args.juris.lower() / 'rinexantls'
+BASELINES_DIR = NGCA_DIR / args.juris.lower() / 'baselines'
 
 # Check that the necessary directories exist
-if not os.path.isdir('rinexantls'):
-    sys.exit('Please check your current directory: rinexantls/ does not exist')
-if not os.path.isdir('sinexFiles'):
-    sys.exit('Please check your current directory: sinexFiles/ does not exist')
-if not os.path.isdir('baselines'):
-    sys.exit('Please check your current directory: baselines/ does not exist')
+if not SINEX_DIR.is_dir():
+    raise ValueError('Please check your current directory: sinexFiles/ does not exist')
+if not RINEXANTLS_DIR.is_dir():
+    raise ValueError('Please check your current directory: rinexantls/ does not exist')
+if not BASELINES_DIR.is_dir():
+    raise ValueError('Please check your current directory: baselines/ does not exist')
 
 # Set some variables
 refFrame = 'ITRF2014'
 
 # Delete the old baselines
 print('* Deleting all existing baselines')
-rmtree('baselines/')
-os.mkdir('baselines/')
+rmtree(BASELINES_DIR)
+BASELINES_DIR.mkdir()
 
 # Read in the discontinuity information for renaming purposes
 disconts = {}
 stnsWdiscont = set()
-for discontFile in glob(f'{Path.home()}/apref/apref*.disconts'):
+for discontFile in NGCA_APREF_DIR.glob("apref*.disconts"):
     pass
 for line in open(discontFile):
     if line[4] == '_':
@@ -105,12 +112,12 @@ for line in open(discontFile):
 
 # Loop over the input files
 print('* Creating a baseline cluster for every file in sinexFiles/')
-for inputFile in glob('sinexFiles/*.SNX.*'):
+for inputFile in SINEX_DIR.glob('*.SNX.ITRF2014.*'):
     
 # Get the yearDoy and epoch
-    rootName = os.path.basename(inputFile)
-    rootName = rootName.replace('.SNX.' + jur.upper() + '.NGCA', '')
-    rootName = rootName.replace('.SNX.AUS', '_all')
+    rootName = inputFile.name
+    rootName = rootName.replace(f'.SNX.ITRF2014.{args.juris.upper()}.NGCA', '')
+    rootName = rootName.replace('.SNX.ITRF2014.AUS', '_all')
     yyDoy = rootName[:5]
     if int(yyDoy) < 94000:
         yearDoy = '20' + yyDoy
@@ -123,8 +130,8 @@ for inputFile in glob('sinexFiles/*.SNX.*'):
     epoch = date.strftime('%d.%m.%Y')
 
 # Open the output files
-    stn = open(rootName + '_stn.xml', 'w')
-    msr = open(rootName + '_msr.xml', 'w')
+    stn = open(BASELINES_DIR / (rootName + '_stn.xml'), 'w')
+    msr = open(BASELINES_DIR / (rootName + '_msr.xml'), 'w')
 
 # Write headers
     stn.write('<?xml version="1.0"?>\n')
@@ -150,19 +157,19 @@ for inputFile in glob('sinexFiles/*.SNX.*'):
     goE = 0
     goM = 0
     for line in lines:
-        if re.match('\+SOLUTION/ESTIMATE', line):
+        if re.match(r'\+SOLUTION/ESTIMATE', line):
             goE = 1
-        if re.match('\+SOLUTION/MATRIX_ESTIMATE', line):
+        if re.match(r'\+SOLUTION/MATRIX_ESTIMATE', line):
             goM = 1
         if goE:
-            if not re.match('\+|\*|\-', line):
+            if not re.match(r'\+|\*|\-', line):
                 estimateLines.append(line)
         if goM:
-            if not re.match('\+|\*|\-', line):
+            if not re.match(r'\+|\*|\-', line):
                 matrixLines.append(line)
-        if re.match('\-SOLUTION/ESTIMATE', line):
+        if re.match(r'\-SOLUTION/ESTIMATE', line):
             goE = 0
-        if re.match('\-SOLUTION/MATRIX_ESTIMATE', line):
+        if re.match(r'\-SOLUTION/MATRIX_ESTIMATE', line):
             goM = 0
 
 # Create a list of dictionaries to hold the station names and their coordinates
@@ -199,7 +206,7 @@ for inputFile in glob('sinexFiles/*.SNX.*'):
         rinexAntLs = rootName + '_ls'
     else:
         rinexAntLs = rootName.replace('_', '') + '_ls'
-    rinexAntLs = 'rinexantls/' + rinexAntLs
+    rinexAntLs = RINEXANTLS_DIR / rinexAntLs
     coreStation = ''
     for line in open(rinexAntLs):
         stat = line[0:4]
@@ -207,7 +214,7 @@ for inputFile in glob('sinexFiles/*.SNX.*'):
             coreStation = stat.upper()
             break
     if not coreStation:
-        sys.exit('No core station set')
+        raise RuntimeError('No core station set')
         
 # Set the index of the core station
     for i in range(len(data)):
@@ -342,12 +349,9 @@ for inputFile in glob('sinexFiles/*.SNX.*'):
             msr.write('\t\t\t</GPSCovariance>\n')
         numCovar -= 1
         msr.write('\t\t</GPSBaseline>\n')
-    msr.write('\t\t<Source>%s</Source>\n'%os.path.basename(inputFile))
+    msr.write(f'\t\t<Source>{inputFile.name}</Source>\n')
     msr.write('\t</DnaMeasurement>\n')
     stn.write('</DnaXmlFormat>\n')
     msr.write('</DnaXmlFormat>\n')
-
-for file in glob('*.xml'):
-    os.rename(file, 'baselines/' + file)
 
 print('*** Change to using epoch in SINEX file rather than the filename')

@@ -1,18 +1,47 @@
 #!/usr/bin/bash
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 if [[ -d "$SCRIPT_DIR/scripts" ]] && [[ ":$PATH:" != *":$SCRIPT_DIR/scripts:"* ]]; then
     export PATH="$PATH:$SCRIPT_DIR/scripts"
 fi
 
-# Archive date for NGCA processing, e.g. the date on which get_ngca.py has downloaded the NGCA archive contents for the jurisdictions being processed 
-ARCHIVE=20260825
+# Parse jurisdiction flag
+JURIS_LIST=()
 
-# List of jurisdictions to run consecutively - increasing number of RINEX
-#JURIS_LIST=("tas" "act" "vic" "sa" "nt" "wa" "nsw" "qld")
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -j|--juris)
+            shift
+            while [[ $# -gt 0 && ! "$1" =~ ^- ]]; do
+                JURIS_LIST+=("${1,,}")   # force lowercase
+                shift
+            done
+            ;;
+        -a|--archive)
+            shift
+            ARCHIVE="$1"
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: $0 -j tas act nsw -a 20260825"
+            exit 1
+            ;;
+    esac
+done
 
-# Alternatively run a single jurisdiction
-JURIS_LIST=("tas")
+# Check if archive date is specified
+if [[ -z "$ARCHIVE" ]]; then
+    echo "Archive date not specified. Use -a <archive_date> to specify the archive date."
+    exit 1
+fi
+
+# Use all jurisdictions if none specified
+if [[ ${#JURIS_LIST[@]} -eq 0 ]]; then
+    JURIS_LIST=("tas" "act" "vic" "sa" "nt" "wa" "nsw" "qld")
+fi
 
 # Commentary 
 printf "\nWill run script to organise NGCA files after the AUSPOS processing.\n"
@@ -39,19 +68,19 @@ for JURIS in ${JURIS_LIST[*]}; do
     # Coordinate transformation
     # - ITRF2020 --> ITRF2014
     printf "\nExecuting transformSINEX_NGCA.py...\n"
-    ngca_transformSinex.py
+    ngca_transformSinex.py -j $JURIS
 
     # Remove stations outside of GDA2020 from NGCA 
     printf "\nExecuting exciseStationsNGCA.py...\n"
-    ngca_exciseStations.py
+    ngca_exciseStations.py -j $JURIS
 
     # Select stations from APREF to use as constraints
     printf "\nExecuting selectRef.py...\n"
-    ngca_selectRef.py
+    ngca_selectRef.py -j $JURIS
 
     # Form baselines from the stations in a SINEX file and create DynaML formatted files
     printf "\nExecuting createBLs.py...\n"
-    ngca_createBLs.py
+    ngca_createBLs.py -j $JURIS
 
     # Update translation tables in transTables/ with those on the GA ftp server
     printf "\nExecuting updateTTables.py...\n"
@@ -63,7 +92,7 @@ for JURIS in ${JURIS_LIST[*]}; do
 
     # Translate stations that use the conventional 4-character ID to the name commonly used by the state or jurisdiction
     printf "\nExecuting stationTrans.pl...\n"
-    ngca_stationTrans.pl
+    ngca_stationTrans.py -j $JURIS
 
     # Navigate to baseline directory
     cd ../baselines

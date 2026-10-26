@@ -11,27 +11,35 @@
 #
 # Note: wildcards are accepted
 
-import os
-import glob
 import subprocess
 import geodepy.gnss
+from ngca_path import NGCA_DIR
+import argparse
+from pathlib import Path
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-j", "--juris", required=True, help="Jurisdiction to process")
+
+args = parser.parse_args()
 
 
 # Copy over gda2020.dat
-os.system('cp ../../auxiliary_files/gda2020.dat .')
+GDA2020_DAT_PATH = NGCA_DIR / 'auxiliary_files' / 'gda2020.dat'
+SINEX_DIR = NGCA_DIR / args.juris.lower() / 'sinexFiles'
 
 # Create a list of APREF stations to exclude
 exclude = ['MAC1', 'CEDU', 'CA19', 'HOBA', 'CCPL', 'IGWD'];
 
 # Loop over the input SINEX files
-for f in glob.glob('*.SNX'):
+for f in SINEX_DIR.glob('*.SNX.ITRF2014'):
 
     # Use subprocess to run rdsinex and GMT and create a list of stations 
     # outside GDA2020
     stns = set()
     rdsnx = subprocess.Popen(["rdsinex","-P",f], stdout=subprocess.PIPE,
                              stderr=subprocess.DEVNULL)
-    gmt = subprocess.Popen(["gmt", "select", "-Ef","-Fgda2020.dat", "-If"],
+    gmt = subprocess.Popen(["gmt", "select", "-Ef","-F" + str(GDA2020_DAT_PATH), "-If"],
                            stdin=rdsnx.stdout, stdout=subprocess.PIPE)
     all_details_b = gmt.stdout.read()
     all_details = all_details_b.decode()
@@ -56,10 +64,8 @@ for f in glob.glob('*.SNX'):
 
     # Remove stations and rename output file
     geodepy.gnss.remove_stns_sinex(f, stns)
-    ofile = f + '.AUS'
-    os.rename('output.snx', ofile)
+    ofile = f.with_name(f.name + ".AUS")
+    Path("output.snx").rename(ofile)
 
-# Tidy up
-os.remove('gda2020.dat')
 print('*** EXCLUDING ***')
 print(exclude)

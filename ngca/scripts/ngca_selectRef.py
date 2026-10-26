@@ -2,35 +2,34 @@
 
 # renameless 20251111 - added additonal debug prints, deactivated all except print when removing SINEX due to zero user stations
 
-import subprocess, os, logging
-from glob import glob
+import subprocess, logging
 from math import sqrt
 from pathlib import Path
 import shutil
 import geodepy.gnss
+from ngca_path import NGCA_DIR, NGCA_APREF_DIR
+import argparse
 
-d = os.getcwd() 
-j = d.split('/')[-2]
-ngca_dir = Path(__file__).resolve().parents[1]
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-j", "--juris", required=True, help="Jurisdiction to process")
+
+args = parser.parse_args()
+
+# Directory
+JURIS_DIR = NGCA_DIR / args.juris.lower()
+SINEX_DIR = NGCA_DIR / args.juris.lower() / 'sinexFiles'
+RINEXANTLS_DIR = NGCA_DIR / args.juris.lower() / 'rinexantls'
 
 # Create a list of the APREF stations that are used as constraints, that is,
 # those that have more than 2 years of data
 go = 0
 constraints = []
 
-#Reading Apref from folder with checks
-apref_dirs = list(ngca_dir.glob("APREF*"))
+# Find the APREF solution file
+apref_sols = list(NGCA_APREF_DIR.glob("apref*.snx"))
 
-if len(apref_dirs) == 0:
-    raise FileNotFoundError(f"No APREF folder found in {ngca_dir}")
-
-if len(apref_dirs) > 1:
-    raise RuntimeError(f"Expected one APREF directory, found {len(apref_dirs)}: {apref_dirs}")
-
-apref_dir = apref_dirs[0]
-
-apref_sols = list(apref_dir.glob("apref*.snx"))
-
+# If not exactly one solution file, raise error
 if len(apref_sols) == 0:
     raise FileNotFoundError(f"No apref*.snx file found in {apref_sols}")
 
@@ -39,6 +38,7 @@ if len(apref_sols) > 1:
 
 aprefSol = apref_sols[0]  
 
+# Create a list of APREF stations that are constraints (In solution file)
 f = open(aprefSol)
 for line in f:
     if line[0:8] == '-SITE/ID':
@@ -49,177 +49,128 @@ for line in f:
         go = 1 
 f.close()
 
-# Set up logging
-for f in glob('../20??????'):
-    pass
-logFile = f + '/selectRef.log'
-tempLogFile = f + '/temp.log'
-if os.path.isfile(logFile):
-    os.remove(logFile)
-logging.basicConfig(filename = logFile, level = logging.INFO)
+# Find most recent NGCA directory
+dirs = sorted(JURIS_DIR.glob('20??????'))
+lates_dir = dirs[-1]
+
+# Creating log file in most recent NGCA directory
+logFile = lates_dir / 'selectRef.log'
+tempLogFile = lates_dir / 'temp.log'
+logging.basicConfig(filename=logFile, level=logging.INFO, filemode='w')
 
 # Loop over the SINEX files
-for snx in glob('*.AUS'):
+for snx in SINEX_DIR.glob('*.AUS'):
     print(snx)
-    # os.system('printf "looping on snx: "' + snx)
-    # os.system('printf "\n"')
-    ngcaVer = snx.replace('AUS', j.upper() + '.NGCA')
-    rinexantls = snx.replace('.SNX.AUS', '_ls')
-    rinexantls = '../rinexantls/' + rinexantls
+
+    # Create name of new sinex file
+    ngcaVer = snx.with_name(snx.name.replace('AUS', args.juris.upper() + '.NGCA'))
+
+    # Find name of related rinexantls file
+    rinexantls = RINEXANTLS_DIR / snx.name.replace('.SNX.ITRF2014.AUS', '_ls')
+    
     sub = []
 
+    # Adds name of stations in rinexantls to sub list. This gives a list of the NGCA stations for the job
     for line in open(rinexantls):
         sub.append(line[0:4])
-        # os.system('printf "looping on rinexantls line : "' + line)
-        # os.system('printf "\n"')
-        # debug_printarray = []
-        # trying this - want all 4 elements
-        # debug_printarray = ','.join(line[0:4])
-        # os.system('printf "line elements 0-4 added to sub: "' + debug_printarray)
-        # os.system('printf "\n"')
+    
+    # Get station coordinates from sinex file
     proc = subprocess.Popen(["rdsinex", "-X", snx], stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
     snxLines = proc.communicate()
     snxLines=snxLines[0].decode("utf-8")
     snxLines = snxLines.split('\n')
+    
     line = {}
     ref = []
     refJuris = []
+    
+    # Loop over each station in sinex file and add to dictionary with the station name as the key 
     for snxLine in snxLines:
-        # os.system('printf "looping on snxLine : "' + snxLine)
-        # os.system('printf "\n"')
+
         if snxLine != '':
             cols = snxLine.split()
             line[cols[0]] = snxLine
-            # os.system('printf "Line cols element 0 : "' + line[cols[0]])
-            # os.system('printf "\n"')
+
             if cols[0] not in sub:
-                ref.append(cols[0])
-                # os.system('printf "cols element 0 not in sub, appending to ref : "' + cols[0])
-                # os.system('printf "\n"')
+                ref.append(cols[0]) # If station is not in the submitted list, add to ref list
+
     sumX = 0
     sumY = 0
     sumZ = 0
+    # Find the number of submitted stations
     numStn = len(sub)
-    # os.system('printf "numStn value : "' + str(numStn))
-    # os.system('printf "\n"')
-    stnsRemoved = []
-    for stn in sub:
-        # os.system('printf "looping on stn in sub - stn value : "' + str(stn))
-        # os.system('printf "\n"')
-        try:
-            line[stn]
 
-            # os.system('printf "trying line of stn, value: "' + str(line[stn]))
-            # os.system('printf "\n"')
+    stnsRemoved = []
+    
+    # Loop over each submitted station
+    for stn in sub:
+        try:
+            # Get the X, Y, Z coordinates of the station from the sinex file and add to the sum of X, Y, Z
             cols = line[stn].split()
-            # debug_printarray = []
-            # debug_printarray = ','.join(cols)
-            # os.system('printf "trying cols over line of stn, value: "' + str(debug_printarray))
-            # os.system('printf "\n"')
+
             sumX = sumX + float(cols[4])
-            # os.system('printf "trying sumX value : "' + str(sumX))
-            # os.system('printf "\n"')
             sumY = sumY + float(cols[5])
-            # os.system('printf "trying sumY value : "' + str(sumY))
-            # os.system('printf "\n"')
             sumZ = sumZ + float(cols[6])
-            # os.system('printf "trying sumZ value : "' + str(sumZ))
-            # os.system('printf "\n"')
+
+        # If submitted station is not in the sinex file, log the error and add to removed stations list
         except KeyError:
             logging.info('Station ' + stn + ' in ' + snx +
                          ' was submitted but failed processing')
-            # os.system('printf "Exception : Item added to log - Station stn in snx submitted but failed processing "')
-            # os.system('printf "\n"')
-            # os.system('printf "Exception : stn "' + stn)
-            # os.system('printf "\n"')
-            # os.system('printf "Exception : snx "' + stn)
-            # os.system('printf "\n"')
 
             numStn -= 1
             stnsRemoved.append(stn)
-            # os.system('printf "stnRemoved item appended : "' + stn)
-            # os.system('printf "\n"')
+
+    # If there are still submitted station in sinex file, calculate the centre of submitted stations
     if numStn != 0:
-        # os.system('printf "numSTN is nonzero"')
-        # os.system('printf "\n"')
         cenX = sumX / len(sub)
         cenY = sumY / len(sub)
         cenZ = sumZ / len(sub)
-        # os.system('printf "centre X value : "' + str(cenX))
-        # os.system('printf "\n"')
-        # os.system('printf "centre Y value : "' + str(cenY))
-        # os.system('printf "\n"')
-        # os.system('printf "centre Z value : "' + str(cenY))
-        # os.system('printf "\n"')
     
         statDist = []
+        
+        # Loop through the reference stations and calculate distance from centre of submitted stations
         for stn in ref:
             if stn in constraints:
                 data = []
                 data.append(stn)
-                # os.system('printf "looping on constraint stn: "' + stn)
-                # os.system('printf "\n"')
                 cols = line[stn].split()
                 dist = sqrt( (cenX - float(cols[4]))**2 + 
                              (cenY - float(cols[5]))**2 +
                              (cenZ - float(cols[6]))**2 )
                 data.append(dist)
-                # os.system('printf "calculated dist: "' + str(dist))
-                # os.system('printf "\n"')
                 statDist.append(data)
 
-        # os.system('printf "sorted statDist: "' + str(debug_printarray))
-        # os.system('printf "\n"')
+        # Sort by distance
         statDist = sorted(statDist, key=lambda x: x[1])
 
-        # os.system('printf "removing ref element: "' + str(statDist[0][0]))
-        # os.system('printf "\n"')
+        # Remove the two cloest reference stations so they will stay in the sinex file.
         ref.remove(statDist[0][0])
-        # os.system('printf "removing ref element: "' + str(statDist[1][0]))
-        # os.system('printf "\n"')
         ref.remove(statDist[1][0])
-        # os.system('printf "Calling geodepy remove stations sinex "')
-        # os.system('printf "\n"')
-        # os.system('printf "Geodepy passed snx: "' + snx)
-        # os.system('printf "\n"')
-        debug_printarray = []
-        debug_printarray = ','.join(ref)
-        # os.system('printf "Geodepy passed ref: "' + str(debug_printarray))
-        # os.system('printf "\n"')
+
+        # Remove the remaining reference stations from the sinex file
         geodepy.gnss.remove_stns_sinex(snx, ref)
-        ngcaSnx = snx.replace('AUS', j.upper() + '.NGCA')
-        os.rename('output.snx', ngcaSnx)
+        Path('output.snx').rename(ngcaVer)
+        
+        # If any stations were not found in the sinex file, remove them from the rinexantls file
         if stnsRemoved:
-            os.rename(rinexantls, 'tmp')
-            f = open(rinexantls, 'w')
-            for line in open('tmp'):
-                if line[0:4] not in stnsRemoved:
-                    # os.system('printf "Element not in stnsRemoved: "' + str(line[0:4]))
-                    # os.system('printf "\n"')
-                    f.write(line)
-                    # os.system('printf "line added to f "' + line)
-                    # os.system('printf "\n"')
-            f.close()
-            os.remove('tmp')
+            lines = [line for line in rinexantls.read_text().splitlines(True) if line[0:4] not in stnsRemoved]
+            rinexantls.write_text(''.join(lines))
+        
+    # If there are no submitted stations in the sinex file, delete the sinex and rinexantls files and log        
     else:
-        # os.system('printf "else case - numstn is zero "')
-        # os.system('printf "\n"')
-        fullSNX = snx.replace('.AUS', '')
-        # os.system('printf "Deleting fullSNX: "' + fullSNX)
-        # os.system('printf "\n"')
-        os.remove(fullSNX)
-        # os.system('printf "Deleting snx: "' + snx)
-        # os.system('printf "\n"')
-        os.remove(snx)
-        # os.system('printf "Deleting rinexantls: "' + snx)
-        # os.system('printf "\n"')
-        os.remove(rinexantls)
-        os.system('printf "Adding log - Sinex deleted, no stations left: "' + snx)
-        os.system('printf "\n"')
+        fullSNX = snx.with_suffix('')
+
+        fullSNX.unlink()
+        snx.unlink()
+        rinexantls.unlink()
+
+        print(f"Adding log - Sinex deleted, no stations left: {snx}")
         logging.info(snx + 
                 ' was deleted as it had no submitted stations left.')
+
 logging.shutdown()
-shutil.copyfile(logFile, tempLogFile)
-if os.stat(logFile).st_size == 0:
-    os.remove(logFile)
+shutil.copyfile(logFile, tempLogFile) # I am not sure yet why this tmp log file exists
+
+if logFile.stat().st_size == 0:
+    logFile.unlink()

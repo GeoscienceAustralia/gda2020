@@ -13,8 +13,9 @@ h uncert: stations that have horizontal uncertainties larger than this will
             be flagged (in mm)
 v uncert: stations that have vertical uncertainties larger than this will be
             flagged (in mm)
+
+Revised the column/array numbers for added E/N/z information in adjustment scripts.            
 """
-# renameless 20251111 - Revised the column/array numbers for added E/N/z information in adjustment scripts.            
 
 from glob import glob
 import argparse

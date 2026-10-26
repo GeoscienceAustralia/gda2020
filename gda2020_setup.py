@@ -223,7 +223,7 @@ def setup_processes(repo_root, processes, dry_run=False):
     print()
 
     # Downlad packages needed for rest of setup to run.
-    for package in ["zip", "unzip"]:
+    for package in ["zip", "unzip", "gmt", "gmt-dcw", "gmt-gshhg"]:
         subprocess.run(["sudo", "apt", "install", "-y", package], check=True)
         print(f"  Downloaded {package}")
 
