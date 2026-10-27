@@ -473,7 +473,7 @@ def download_packages(packages, dry_run=False):
             for package in package_list:
                 download_git_package(**package, dry_run=dry_run)
 
-def download_git_package(provider, owner, repo, destination=None, most_recent=True, version=None, include=None, unzip=False, dry_run=False):
+def download_git_package(provider, owner, repo, destination=None, most_recent=True, version=None, include=None, unzip=False, dry_run=False, executable=False):
     """
     Downloads git package that has tags. Will either grabs latest release or version given.
     Doesnt currently only works for public github repos
@@ -571,6 +571,18 @@ def download_git_package(provider, owner, repo, destination=None, most_recent=Tr
                     Path.unlink(output_path)
                 except:
                     raise RuntimeError(f"Failed to unzip {output_path}")
+
+                # Once unzipped make executable if needed
+                if executable:
+                    print(f"  Making {output_path_unzipped} executable")
+                    for file in output_path_unzipped.glob("*"):
+                        if file.is_file():
+                            file.chmod(file.stat().st_mode | 0o111)
+                    executable = False
+
+            # Make executable if needed
+            if executable:
+                output_path.chmod(output_path.stat().st_mode | 0o111)
 
     return output_path
 

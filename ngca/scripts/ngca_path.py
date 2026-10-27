@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 # Find repo root
 def find_repo_root(path=None):
@@ -24,6 +25,24 @@ def find_apref_dir(path):
 
     return apref_dirs[0]
 
+def get_dynadjust_env():
+    """Return an environment containing the DynAdjust paths."""
+    env = os.environ.copy()
+
+    dynadjust_dir = str(DYNADJUST_DIR)
+
+    path_dirs = env.get("PATH", "").split(os.pathsep)
+    if dynadjust_dir not in path_dirs:
+        env["PATH"] = dynadjust_dir + os.pathsep + env.get("PATH", "")
+
+    library_dirs = env.get("LD_LIBRARY_PATH", "").split(os.pathsep)
+    if dynadjust_dir not in library_dirs:
+        env["LD_LIBRARY_PATH"] = (
+            dynadjust_dir + os.pathsep + env.get("LD_LIBRARY_PATH", "")
+        )
+
+    return env
+
 REPO_ROOT = find_repo_root()
 
 # ---- Directories ------------------------------------------------------------
@@ -32,4 +51,8 @@ NGCA_DIR = REPO_ROOT / "ngca"
 NGCA_APREF_DIR = find_apref_dir(NGCA_DIR)
 NGCA_TRANS_TABLES_DIR = NGCA_DIR / "transTables"
 
-DYNADJUST_DIR = REPO_ROOT / "dynadjust-linux-mkl"
+DYNADJUST_DIR = REPO_ROOT / "dynadjust-linux-static"
+
+# ---- Env --------------------------------------------------------------------
+
+DYNADJUST_ENV = get_dynadjust_env()

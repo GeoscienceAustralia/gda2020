@@ -6,6 +6,10 @@ if [[ -d "$SCRIPT_DIR/scripts" ]] && [[ ":$PATH:" != *":$SCRIPT_DIR/scripts:"* ]
     export PATH="$PATH:$SCRIPT_DIR/scripts"
 fi
 
+# TEMP
+
+CPUS=4
+
 # Parse jurisdiction flag
 JURIS_LIST=()
 
@@ -99,11 +103,11 @@ for JURIS in ${JURIS_LIST[*]}; do
 
     # Run minimally-constrained adjustment for each baseline cluster
     printf "\nExecuting minAdjust.pl...\n"
-    ngca_minAdjust.pl
+    ngca_minAdjust.py -j $JURIS -c $CPUS
 
     # Report, organise, and generate Sigma0.dat
-    printf "\nExecuting howgoesit.pl...\n"
-    ngca_howGoesIt.pl
+    #printf "\nExecuting howgoesit.pl...\n"
+    #ngca_howGoesIt.pl
 
     # Print out the last Sigma0 from the Sigma0 file
     printf "\nHighest Sigma0s for $JURIS:  \n"

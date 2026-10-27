@@ -60,7 +60,6 @@ logging.basicConfig(filename=logFile, level=logging.INFO, filemode='w')
 
 # Loop over the SINEX files
 for snx in SINEX_DIR.glob('*.AUS'):
-    print(snx)
 
     # Create name of new sinex file
     ngcaVer = snx.with_name(snx.name.replace('AUS', args.juris.upper() + '.NGCA'))

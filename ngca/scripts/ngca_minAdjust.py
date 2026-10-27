@@ -1,195 +1,150 @@
 #!/usr/bin/env python3
+"""Run a minimally constrained adjustment for a jurisdiction's baseline clusters."""
 
-"""
-Run a minimally constrained adjustment for each baseline cluster.
-
-Python conversion of ngca_minAdjust.pl.
-
-20251111:
-Include E N coordinates via --stn-coord-types, as XYZ files are retained.
-"""
-
-from pathlib import Path
+import argparse
 import re
-import shutil
 import subprocess
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
+from ngca_path import DYNADJUST_ENV, NGCA_APREF_DIR, NGCA_DIR
 
-HOME = Path.home()
-WORK_DIR = Path.cwd()
+parser = argparse.ArgumentParser()
 
+parser.add_argument("-j", "--juris", required=True, help="Jurisdiction to process")
+parser.add_argument("-c", "--cpus", type=int, default=4, help="Number of baseline clusters to process concurrently")
 
-def copy_required_files():
-    """Copy DynaML schema, APREF SINEX, and discontinuity SINEX files."""
+args = parser.parse_args()
 
-    # DynaML.xsd is only copied if it isn't already present.
-    dynml = WORK_DIR / "DynaML.xsd"
-    if not dynml.exists():
-        shutil.copy2(HOME / "DynaML.xsd", dynml)
-
-    # Remove existing APREF SINEX files.
-    for path in WORK_DIR.glob("apref*.snx"):
-        path.unlink()
-
-    # Copy current APREF SINEX files.
-    for src in (HOME / "apref").glob("apref*.snx"):
-        shutil.copy2(src, WORK_DIR / src.name)
-
-    # Remove existing discontinuity SINEX files.
-    for path in WORK_DIR.glob("disconts*.snx"):
-        path.unlink()
-
-    # Copy current discontinuity SINEX files.
-    for src in (HOME / "apref").glob("disconts*.snx"):
-        shutil.copy2(src, WORK_DIR / src.name)
+# Directory
+JURIS_DIR = NGCA_DIR / args.juris.lower()
+SINEX_DIR = NGCA_DIR / args.juris.lower() / 'sinexFiles'
+RINEXANTLS_DIR = NGCA_DIR / args.juris.lower() / 'rinexantls'
+BASELINES_DIR = NGCA_DIR / args.juris.lower() / 'baselines'
 
 
 def get_apref_stations(apref_file):
-    """Extract 4-character station names from the SINEX SITE/ID block."""
-
-    stations = []
+    stations: set[str] = set()
     in_site_id = False
 
-    with apref_file.open() as fh:
+    with apref_file.open(encoding="utf-8", errors="replace") as fh:
         for line in fh:
             if "-SITE/ID" in line:
                 break
-
             if in_site_id:
-                stations.append(line[1:5])
-
+                station = line[1:5]
+                if station.strip():
+                    stations.add(station)
             if "+SITE/ID" in line:
                 in_site_id = True
 
     return stations
 
+def run_command(command, log_file, cwd, env=DYNADJUST_ENV):
+    """
+    Log commands to be run to a log file and then run command
 
-def run_command(command, log_file):
-    """Log and execute a command."""
-
-    command_text = " ".join(command)
-    log_file.write(command_text + "\n")
+    :param command: List with command to be run
+    :type command: List
+    :param log_file: Path to log file
+    :type log_file: pathlib.Path
+    :param cwd: Location for command to be run
+    :type cwd: pathlib.Path
+    """
+    log_file.write(subprocess.list2cmdline(command) + "\n")
     log_file.flush()
+    subprocess.run(command, check=True, cwd=cwd, env=env, stdout=log_file, stderr=subprocess.STDOUT)
 
-    subprocess.run(command, check=True)
+def process_network(stn_file, apref_files, discont_file, apref_stations):
+    msr_file = stn_file.with_name(
+        stn_file.name.replace("_stn.xml", "_msr.xml")
+    )
 
+    if not msr_file.is_file():
+        raise FileNotFoundError(
+            f"Measurement file not found for {stn_file.name}: {msr_file.name}"
+        )
 
-def main():
-    copy_required_files()
+    network = stn_file.name.removesuffix("_stn.xml")
 
-    apref_files = list(WORK_DIR.glob("apref*.snx"))
-    discont_files = list(WORK_DIR.glob("disconts*.snx"))
+    stations = []
+    constraints = []
+    done = set()
+    mac1_station = None
 
-    if not apref_files:
-        raise FileNotFoundError("No apref*.snx file found")
+    with stn_file.open(encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            if "<Name>" not in line:
+                continue
 
-    if not discont_files:
-        raise FileNotFoundError("No disconts*.snx file found")
+            match = re.search(r"<Name>\s*(.*?)\s*</Name>", line)
+            if not match:
+                continue
 
-    # Matches the Perl script's effective behaviour of using one matching file.
-    apref_file = apref_files[-1]
-    discont_file = discont_files[-1]
+            stn = match.group(1)
 
-    apref_stns = set(get_apref_stations(apref_file))
+            if re.fullmatch(r"MAC1_\d{7}", stn):
+                mac1_station = stn
 
-    # Loop over XML baseline station files.
-    for stn_file in sorted(WORK_DIR.glob("*_all_stn.xml")):
+            if stn in done or stn.startswith("MAC1"):
+                continue
 
-        msr_file = Path(str(stn_file).replace("stn", "msr"))
-        network = stn_file.name.replace("_stn.xml", "")
+            done.add(stn)
+            stations.append(stn)
 
-        stations = []
-        constraints = []
-        done = set()
-        mac1_station = None
+            if stn in apref_stations:
+                constraints.append(f"{stn},CCC")
+            elif (
+                re.fullmatch(r"\w{4}_\d{7}", stn)
+                and stn[:4] in apref_stations
+            ):
+                constraints.append(f"{stn},CCC")
 
-        with stn_file.open() as fh:
-            for line in fh:
+    include_stations = ",".join(stations)
+    constraint_string = ",".join(constraints)
 
-                if "<Name>" not in line:
-                    continue
+    if not include_stations:
+        raise RuntimeError(f"No stations found in {stn_file.name}")
 
-                match = re.search(r"<Name>\s*(.*?)\s*</Name>", line)
-                if not match:
-                    continue
+    if not constraint_string:
+        raise RuntimeError(
+            f"No APREF constraints identified for {stn_file.name}"
+        )
 
-                stn = match.group(1)
+    log_path = BASELINES_DIR / network
 
-                # MAC1 discontinuity station.
-                if re.fullmatch(r"MAC1_\d{7}", stn):
-                    mac1_station = stn
+    with log_path.open("w", encoding="utf-8") as log:
+        cmd = [
+            "dnaimport",
+            "-n", network,
+            "-r", "GDA2020",
+            *[str(p) for p in apref_files],
+            stn_file.name,
+            msr_file.name,
+            "--include-stns-assoc-msrs", include_stations,
+            "--split-gnss-cluster-msrs",
+        ]
 
-                # Perl excludes all MAC1 names from the include list.
-                if stn in done or stn.startswith("MAC1"):
-                    continue
-
-                done.add(stn)
-                stations.append(stn)
-
-                # Direct APREF station match.
-                if stn in apref_stns:
-                    constraints.append(f"{stn},CCC")
-                    continue
-
-                # Discontinuity station such as ABCD_2025001.
-                if re.fullmatch(r"\w{4}_\d{7}", stn):
-                    root = stn[:4]
-
-                    if root in apref_stns:
-                        constraints.append(f"{stn},CCC")
-
-        include_stations = ",".join(stations)
-        constraint_string = ",".join(constraints)
-
-        # Command log, retaining the behaviour of the Perl script.
-        with open(network, "w") as log:
-
-            #
-            # dnaimport
-            #
-
-            cmd = [
-                "dnaimport",
-                "-n", network,
-                "-r", "GDA2020",
-                *[str(p) for p in sorted(WORK_DIR.glob("apref*.snx"))],
-                str(stn_file),
-                str(msr_file),
-                "--include-stns-assoc-msrs",
-                include_stations,
-                "--split-gnss-cluster-msrs",
-            ]
-
-            if mac1_station:
-                cmd.extend([
-                    "--exclude-stns-assoc-msrs",
-                    mac1_station,
-                ])
-
+        if mac1_station:
             cmd.extend([
-                "--exclude-msr-types", "Y",
-                "--discontinuity-file", str(discont_file),
+                "--exclude-stns-assoc-msrs",
+                mac1_station,
             ])
 
-            run_command(cmd, log)
+        cmd.extend([
+            "--exclude-msr-types", "Y",
+            "--discontinuity-file", discont_file.name,
+        ])
 
-            #
-            # dnareftran
-            #
+        run_command(cmd, log, BASELINES_DIR)
 
-            cmd = [
-                "dnareftran",
-                "-n", network,
-                "-r", "GDA2020",
-            ]
+        run_command(
+            ["dnareftran", "-n", network, "-r", "GDA2020"],
+            log,
+            BASELINES_DIR,
+        )
 
-            run_command(cmd, log)
-
-            #
-            # dnaadjust
-            #
-
-            cmd = [
+        run_command(
+            [
                 "dnaadjust",
                 "-n", network,
                 "--simult",
@@ -197,9 +152,118 @@ def main():
                 "--output-adj-msr",
                 "--sort-adj-msr-field", "7",
                 "--stn-coord-types", "ENzPLHhXYZ",
-            ]
+            ],
+            log,
+            BASELINES_DIR,
+        )
 
-            run_command(cmd, log)
+    return network
+
+def extract_adj_values(search_text, output_file):
+    """Extract matching lines from .adj files and sort numerically by field 4."""
+
+    lines = []
+
+    for adj_file in BASELINES_DIR.glob("*.adj"):
+        with adj_file.open(encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                if search_text in line:
+                    lines.append(f"{adj_file.name}:{line.rstrip()}")
+
+    # Equivalent to: sort -g -k 4
+    def sort_key(line):
+        fields = line.split()
+
+        try:
+            return float(fields[3])
+        except (IndexError, ValueError):
+            return float("inf")
+
+    lines.sort(key=sort_key)
+
+    with output_file.open("w", encoding="utf-8") as fh:
+        for line in lines:
+            fh.write(line + "\n")
+
+def main():
+
+    apref_files = sorted(NGCA_APREF_DIR.glob("apref*.snx"))
+    discont_files = sorted(NGCA_APREF_DIR.glob("disconts*.snx"))
+
+    if not apref_files:
+        raise FileNotFoundError(f"No apref*.snx found in {JURIS_DIR}")
+    if not discont_files:
+        raise FileNotFoundError(f"No disconts*.snx found in {JURIS_DIR}")
+
+    apref_file = apref_files[-1]
+    discont_file = discont_files[-1]
+    apref_stations = get_apref_stations(apref_file)
+
+    # Find all stations files
+    station_files = sorted(BASELINES_DIR.glob("*_all_stn.xml"))
+    if not station_files:
+        raise FileNotFoundError(f"No *_all_stn.xml files found in {BASELINES_DIR}")
+
+    total = len(station_files)
+    completed = 0
+    failed = 0
+
+    # Run clusters concurrently
+    with ProcessPoolExecutor(max_workers=args.cpus) as executor:
+
+        futures = {}
+
+        # Iterate through each cluster
+        for stn_file in station_files:
+        
+            future = executor.submit(
+                process_network,
+                stn_file,
+                apref_files,
+                discont_file,
+                apref_stations,
+            )
+
+            # Store which station file belongs to this job
+            futures[future] = stn_file
+        
+        # Handle clusters as they finish
+        for future in as_completed(futures):
+            stn_file = futures[future]
+
+            try:
+                network = future.result()
+                completed += 1
+
+                processed = completed + failed
+
+                print(f"[{processed}/{total}] Completed: {network}", flush=True)
+                
+            except subprocess.CalledProcessError as exc:
+                failed += 1
+
+                processed = completed + failed
+                print(f"[{processed}/{total}] Failed: {stn_file.name} ({exc.cmd[0]} returned exit code {exc.returncode})", flush=True)
+            
+            except Exception as exc:
+                failed += 1
+
+                processed = completed + failed
+                print(f"[{processed}/{total}] FAILED: {stn_file.name}: {exc}", flush=True)
+
+    if failed == 0:
+        print(f"\nAll {total} clusters processed successfully!")
+
+        # Create file that contains all sigma zeros and degrees of freedom
+        extract_adj_values("Rigorous", BASELINES_DIR / "sigma0.dat")
+        extract_adj_values("Degrees", BASELINES_DIR / "dof.dat")
+
+        print("Created sigma0.dat")
+        print("Created dof.dat")
+
+
+    else:
+        print(f"\n{completed} of {total} clusters completed successfully.")
 
 
 if __name__ == "__main__":
