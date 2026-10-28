@@ -16,7 +16,7 @@ for item in NGCA_TRANS_TABLES_DIR.iterdir():
         item.unlink()
         
 # Copy the files directory from the S3 bucket
-subprocess.run(['aws', 's3', 'cp', 's3://gda2020-ngca/files/', str(NGCA_TRANS_TABLES_DIR), '--recursive', '--exclude', '*', '--include', '*Trans*'], check=True)
+subprocess.run(['aws', 's3', 'cp', 's3://gda2020-ngca/files/', str(NGCA_TRANS_TABLES_DIR), '--recursive', '--exclude', '*', '--include', '*Trans*', '--only-show-errors'], check=True)
 
 # Loop over the csv files
 for item in NGCA_TRANS_TABLES_DIR.iterdir():

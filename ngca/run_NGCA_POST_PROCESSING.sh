@@ -7,7 +7,6 @@ if [[ -d "$SCRIPT_DIR/scripts" ]] && [[ ":$PATH:" != *":$SCRIPT_DIR/scripts:"* ]
 fi
 
 # TEMP
-
 CPUS=4
 
 # Parse jurisdiction flag
@@ -52,83 +51,63 @@ printf "\nWill run script to organise NGCA files after the AUSPOS processing.\n"
 printf "\nWill be working on these jurisdictions: ${JURIS_LIST[*]^^}, for the $ARCHIVE NGCA archive.\n"
 
 # Pause and wait for user reaction
-read -p "Hit [ENTER] key if correct, OR [Ctrl C] if you want to abort..."
+#read -p "Hit [ENTER] key if correct, OR [Ctrl C] if you want to abort..."
 
 for JURIS in ${JURIS_LIST[*]}; do
 
-    # Navigate to jurisdiction directory
-    printf "\nNavigating to ${JURIS^^} archive directory...\n"
     cd $SCRIPT_DIR/$JURIS/$ARCHIVE
 
     # Make backup of files in case there are any issues
     printf "\nCopying files to backup directory in case there are issues later...\n"
     cp -r ../$ARCHIVE/ ../sinexFiles/ ../rinexantls/ ../backup/
 
-    # renameless 20251111 - Code review has identified script is not required, supporting scripts have been modified to remove namechanges.dat functionality.
-    # Revert station names modified by prepfiles
-    # printf "\nExecuting nameChanges.pl...\n"
-    # nameChanges.pl
-
     # Coordinate transformation
     # - ITRF2020 --> ITRF2014
-    printf "\nExecuting transformSINEX_NGCA.py...\n"
+    printf "\nTransforming from ITRF2020 to ITRF2014...\n"
     ngca_transformSinex.py -j $JURIS
 
     # Remove stations outside of GDA2020 from NGCA 
-    printf "\nExecuting exciseStationsNGCA.py...\n"
+    printf "\nRemoving stations outside GDA2020...\n"
     ngca_exciseStations.py -j $JURIS
 
     # Select stations from APREF to use as constraints
-    printf "\nExecuting selectRef.py...\n"
+    printf "\nSelecting stations to use as constraints...\n"
     ngca_selectRef.py -j $JURIS
 
     # Form baselines from the stations in a SINEX file and create DynaML formatted files
-    printf "\nExecuting createBLs.py...\n"
+    printf "\nCreating baselines...\n"
     ngca_createBLs.py -j $JURIS
 
     # Update translation tables in transTables/ with those on the GA ftp server
-    printf "\nExecuting updateTTables.py...\n"
+    printf "\nUpdating transTables...\n"
     ngca_updateTTables.py
 
     # Check the jurisdicitonal translation tables for duplicates
-    printf "\nExecuting checkTTables.py...\n"
+    printf "\nChecking transTables...\n"
     ngca_checkTTables.py 
 
     # Translate stations that use the conventional 4-character ID to the name commonly used by the state or jurisdiction
-    printf "\nExecuting stationTrans.pl...\n"
+    printf "\nUsing transtables to update station names...\n"
     ngca_stationTrans.py -j $JURIS
 
-    # Navigate to baseline directory
-    cd ../baselines
-
     # Run minimally-constrained adjustment for each baseline cluster
-    printf "\nExecuting minAdjust.pl...\n"
+    printf "\nAdjusting each cluster\n"
     ngca_minAdjust.py -j $JURIS -c $CPUS
 
-    # Report, organise, and generate Sigma0.dat
-    #printf "\nExecuting howgoesit.pl...\n"
-    #ngca_howGoesIt.pl
-
-    # Print out the last Sigma0 from the Sigma0 file
-    printf "\nHighest Sigma0s for $JURIS:  \n"
-    tail -n5 sigma0.dat
-    printf "\n"
-    exit
-
     # Update the Vscale in the NGCA baseline files based on the values in sigma0.dat
-    printf "\nExecuting addSigma0.py...\n"
+    printf "\nUpdating vscale values...\n"
     ngca_addSigma0.py -j $JURIS
     
     # Combine into a single file
-    printf "\nExecuting combineNGCA.py...\n"
+    printf "\nCombining clusters...\n"
     ngca_combine.py -j $JURIS -a $ARCHIVE
 
     # Run fully constrained adjustment performed after NGCA scaling
-    printf "\nExecuting fullAdjust.py...\n"
+    printf "\nAdjusting combined NGCA...\n"
     ngca_fullAdjust.py -j $JURIS -a $ARCHIVE
 
     # Organise results
-    printf "\nExecuting ngcaResults.py...\n"
+    printf "\nOrganising NGCA results...\n"
     ngca_results.py -j $JURIS -a $ARCHIVE
 
 done

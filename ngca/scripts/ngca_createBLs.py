@@ -90,7 +90,7 @@ if not BASELINES_DIR.is_dir():
 refFrame = 'ITRF2014'
 
 # Delete the old baselines
-print('* Deleting all existing baselines')
+print('  Deleting all existing baselines')
 rmtree(BASELINES_DIR)
 BASELINES_DIR.mkdir()
 
@@ -111,7 +111,7 @@ for line in open(discontFile):
         disconts[stn].append(yearDoy)
 
 # Loop over the input files
-print('* Creating a baseline cluster for every file in sinexFiles/')
+print('  Creating a baseline cluster for every file in sinexFiles/')
 for inputFile in SINEX_DIR.glob('*.SNX.ITRF2014.*'):
     
 # Get the yearDoy and epoch
@@ -354,4 +354,4 @@ for inputFile in SINEX_DIR.glob('*.SNX.ITRF2014.*'):
     stn.write('</DnaXmlFormat>\n')
     msr.write('</DnaXmlFormat>\n')
 
-print('*** Change to using epoch in SINEX file rather than the filename')
+print('  Change to using epoch in SINEX file rather than the filename')

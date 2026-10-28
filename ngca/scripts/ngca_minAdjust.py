@@ -255,9 +255,12 @@ def main():
     if failed == 0:
         print(f"\nAll {total} clusters processed successfully!")
 
+        SIGMA0_FILE = BASELINES_DIR / "sigma0.dat"
+        DOF_FILE = BASELINES_DIR / "dof.dat"
+
         # Create file that contains all sigma zeros and degrees of freedom
-        extract_adj_values("Rigorous", BASELINES_DIR / "sigma0.dat")
-        extract_adj_values("Degrees", BASELINES_DIR / "dof.dat")
+        extract_adj_values("Rigorous", SIGMA0_FILE)
+        extract_adj_values("Degrees", DOF_FILE)
 
         print("Created sigma0.dat")
         print("Created dof.dat")
@@ -266,6 +269,11 @@ def main():
     else:
         print(f"\n{completed} of {total} clusters completed successfully.")
 
+    with open(SIGMA0_FILE, "r") as f:
+        lines = f.readlines()
+
+    print(f"\nHighest sigma0s for {args.juris.lower()}: \n")
+    print("".join(lines[-5:]))
 
 if __name__ == "__main__":
     main()
