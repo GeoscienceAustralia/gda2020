@@ -50,6 +50,7 @@ REPO_ROOT = find_repo_root()
 NGCA_DIR = REPO_ROOT / "ngca"
 NGCA_APREF_DIR = find_apref_dir(NGCA_DIR)
 NGCA_TRANS_TABLES_DIR = NGCA_DIR / "transTables"
+NGCA_SENT_DIR = NGCA_DIR / "sent"
 
 DYNADJUST_DIR = REPO_ROOT / "dynadjust-linux-static"
 

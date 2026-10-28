@@ -17,8 +17,6 @@ args = parser.parse_args()
 
 # Directory
 JURIS_DIR = NGCA_DIR / args.juris.lower()
-SINEX_DIR = NGCA_DIR / args.juris.lower() / 'sinexFiles'
-RINEXANTLS_DIR = NGCA_DIR / args.juris.lower() / 'rinexantls'
 BASELINES_DIR = NGCA_DIR / args.juris.lower() / 'baselines'
 
 
@@ -132,7 +130,7 @@ def process_network(stn_file, apref_files, discont_file, apref_stations):
 
         cmd.extend([
             "--exclude-msr-types", "Y",
-            "--discontinuity-file", discont_file.name,
+            "--discontinuity-file", discont_file,
         ])
 
         run_command(cmd, log, BASELINES_DIR)
@@ -208,6 +206,8 @@ def main():
     completed = 0
     failed = 0
 
+    print(f"{total} clusters to process:")
+
     # Run clusters concurrently
     with ProcessPoolExecutor(max_workers=args.cpus) as executor:
 
@@ -237,7 +237,8 @@ def main():
 
                 processed = completed + failed
 
-                print(f"[{processed}/{total}] Completed: {network}", flush=True)
+                if (processed % 100) == 0:
+                    print(f"[{processed}/{total}]", flush=True)
                 
             except subprocess.CalledProcessError as exc:
                 failed += 1

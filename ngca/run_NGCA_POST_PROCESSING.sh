@@ -113,22 +113,23 @@ for JURIS in ${JURIS_LIST[*]}; do
     printf "\nHighest Sigma0s for $JURIS:  \n"
     tail -n5 sigma0.dat
     printf "\n"
+    exit
 
     # Update the Vscale in the NGCA baseline files based on the values in sigma0.dat
     printf "\nExecuting addSigma0.py...\n"
-    ngca_addSigma0.py
+    ngca_addSigma0.py -j $JURIS
     
     # Combine into a single file
     printf "\nExecuting combineNGCA.py...\n"
-    ngca_combine.py
+    ngca_combine.py -j $JURIS -a $ARCHIVE
 
     # Run fully constrained adjustment performed after NGCA scaling
     printf "\nExecuting fullAdjust.py...\n"
-    ngca_fullAdjust.py
+    ngca_fullAdjust.py -j $JURIS -a $ARCHIVE
 
     # Organise results
     printf "\nExecuting ngcaResults.py...\n"
-    ngca_results.py
+    ngca_results.py -j $JURIS -a $ARCHIVE
 
 done
 

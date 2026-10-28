@@ -19,6 +19,7 @@ Revised the column/array numbers for added E/N/z information in adjustment scrip
 
 from glob import glob
 import argparse
+from pathlib import Path
 
 # Create an ArgumentParser object
 parser = argparse.ArgumentParser(
@@ -32,59 +33,72 @@ parser.add_argument('horizontal', metavar='H', type=int,
                     help='flag hori. uncertainties larger than this (in mm)')
 parser.add_argument('vertical', metavar='V', type=int,
                     help='flag vert. uncertainties larger than this (in mm)')
-parser.add_argument('--version', action='version', version='%(prog)s v1.00')
+parser.add_argument('--directory', type=Path, default=Path.cwd(),
+                    help='direcotry containing adjustment files')
 args = parser.parse_args()
 
 # Loop over the .adj files
-for file in glob('*.adj'):
+for file in args.directory.glob('*.adj'):
     badR = False
     badU = False
     outLinesR = []
     outLinesU = []
 
-# Loop over the lines in the .adj file
-    for line in open(file):
+    # Loop over the lines in the .adj file
+    with file.open() as f:
+        for line in f:
 
-# Check the baseline residuals
-        if line[0:2] == 'X ':
-            resid = line[105:117]
-            resid = '{:.1f}'.format(float(resid.strip()) * 1000)
-            if abs(float(resid)) > args.residual:
-                badR = True
-                stat1 = line[2:22].strip()
-                stat2 = line[22:42].strip()
-                comp = line[65:66]
-                outLine = '{:20s}{:20s} {}   {}'.format(
-                            stat1, stat2, comp, resid)
-                outLinesR.append(outLine)
+            # Check the baseline residuals
+            if line[0:2] == 'X ':
+                resid = line[105:117]
+                resid = '{:.1f}'.format(float(resid.strip()) * 1000)
+                
+                if abs(float(resid)) > args.residual:
+                    badR = True
+                    stat1 = line[2:22].strip()
+                    stat2 = line[22:42].strip()
+                    comp = line[65:66]
+                    outLinesR.append(
+                        f"{stat1:20s}{stat2:20s} {comp}   {resid}"
+                    )
 
-# Check the coordinate uncertainties
-        if line[20:23] == 'FFF':
-            east = line[158:170]
-            east = '{:.1f}'.format(float(east.strip()) * 1000)
-            if float(east) > args.horizontal:
-                badU = True
-                stat = line[0:20].strip()
-                outLine = '{:40s} E   {}'.format(stat, east)
-                outLinesU.append(outLine)
-            north = line[170:180]
-            north = '{:.1f}'.format(float(north.strip()) * 1000)
-            if float(north) > args.horizontal:
-                badU = True
-                stat = line[0:20].strip()
-                outLine = '{:40s} N   {}'.format(stat, north)
-                outLinesU.append(outLine)
-            up = line[180:190]
-            up = '{:.1f}'.format(float(up.strip()) * 1000)
-            if float(up) > args.vertical:
-                badU = True
-                stat = line[0:20].strip()
-                outLine = '{:40s} U   {}'.format(stat, up)
-                outLinesU.append(outLine)
+            # Check the coordinate uncertainties
+            if line[20:23] == 'FFF':
+                east = line[158:170]
+                east = '{:.1f}'.format(float(east.strip()) * 1000)
+                
+                if float(east) > args.horizontal:
+                    badU = True
+                    stat = line[0:20].strip()
+                    outLinesU.append(
+                        f"{stat:40s} E   {east}"
+                    )
 
-# Output the results, if there are any
+                north = line[170:180]
+                north = '{:.1f}'.format(float(north.strip()) * 1000)
+                
+                if float(north) > args.horizontal:
+                    badU = True
+                    stat = line[0:20].strip()
+                    outLinesU.append(
+                        f"{stat:40s} N   {north}"
+                    )
+                
+                up = line[180:190]
+                up = '{:.1f}'.format(float(up.strip()) * 1000)
+                
+                if float(up) > args.vertical:
+                    badU = True
+                    stat = line[0:20].strip()
+                    outLinesU.append(
+                        f"{stat:40s} U   {up}"
+                    )
+
+    # Output the results, if there are any
     if badR or badU:
-        print('### ' + file.replace('.simult.adj', '') + ' ###')
+        name = file.name.replace(".simult.adj", "")
+        print(f"### {name} ###")
+        
         if badR:
             for line in outLinesR:
                 print(line)

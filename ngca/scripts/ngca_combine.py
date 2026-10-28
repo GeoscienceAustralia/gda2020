@@ -1,29 +1,116 @@
 #!/usr/bin/env python3
 
-import os
-import re
+import argparse
+import subprocess
 
-p1 = re.compile(r'\d{8}$')
-d = os.getcwd()
-jur = d.split('/')[-2]
-os.chdir('../')
-dirs = os.listdir('.')
-dirs.sort()
-for dir in dirs:
-    if p1.match(dir):
-        date = dir
-os.chdir(d)
-os.system('checkNgca.py 20 20 40 > checkNgca.log')
-os.system('mkdir all')
-os.system('mv *all*.xml all')
-network = jur.upper() + '_NGCA_' + date
-os.system('dnaimport -n ' + network + 
-        ' *stn.xml *msr.xml -r ITRF2014 --export-xml')
-os.system('dnareftran ' + network + ' -r GDA2020 --export-xml')
-os.system('mv ' + network + 'stn.xml ' + network + '_EoO_stn.xml')
-os.system('mv ' + network + 'msr.xml ' + network + '_EoO_msr.xml')
-os.system('mv ' + network + '.GDA2020.1.1.2020stn.xml ' + network +
-    '_stn.xml')
-os.system('mv ' + network + '.GDA2020.1.1.2020msr.xml ' + network +
-    '_msr.xml')
-os.system('rm ' + network + '.*')
+from ngca_path import NGCA_DIR, DYNADJUST_ENV
+
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-j", "--juris", required=True, help="Jurisdiction to process")
+parser.add_argument("-a", "--archive", required=True, help="Archive folder to be processed")
+
+args = parser.parse_args()
+
+
+# Directory
+JURIS_DIR = NGCA_DIR / args.juris.lower()
+BASELINES_DIR = NGCA_DIR / args.juris.lower() / 'baselines'
+ALL_DIR = BASELINES_DIR / "all"
+
+CHECK_SCRIPT = "ngca_check.py"
+
+
+date = args.archive.strip()
+
+network = f"{args.juris.upper()}_NGCA_{date}"
+
+# Run ngca_check.py
+log_file = BASELINES_DIR / "checkNgca.log"
+
+with log_file.open("w") as log:
+    subprocess.run(
+        [
+            str(CHECK_SCRIPT),
+            "20",
+            "20",
+            "40",
+            "--directory",
+            str(BASELINES_DIR),
+        ],
+        stdout=log,
+        check=True,
+    )
+
+
+# Create the all directory
+ALL_DIR.mkdir(exist_ok=True)
+
+# Move *all*.xml files
+for file in BASELINES_DIR.glob("*all*.xml"):
+    file.rename(ALL_DIR / file.name)
+
+combine_log = BASELINES_DIR / "combine.log"
+
+with combine_log.open("w") as log:
+
+    # Run dnaimport
+    subprocess.run(
+        [
+            "dnaimport",
+            "-n",
+            network,
+            *[str(f) for f in BASELINES_DIR.glob("*stn.xml")],
+            *[str(f) for f in BASELINES_DIR.glob("*msr.xml")],
+            "-r",
+            "ITRF2014",
+            "--export-xml",
+        ],
+        check=True,
+        env=DYNADJUST_ENV,
+        cwd=BASELINES_DIR,
+        stdout=log,
+        stderr=subprocess.STDOUT,
+    )
+
+    # Run dnareftran
+    subprocess.run(
+        [
+            "dnareftran",
+            network,
+            "-r",
+            "GDA2020",
+            "--export-xml",
+        ],
+        check=True,
+        env=DYNADJUST_ENV,
+        cwd=BASELINES_DIR,
+        stdout=log,
+        stderr=subprocess.STDOUT,
+    )
+
+# Rename EoO files
+(BASELINES_DIR / f"{network}stn.xml").rename(
+    BASELINES_DIR / f"{network}_EoO_stn.xml"
+)
+
+(BASELINES_DIR / f"{network}msr.xml").rename(
+    BASELINES_DIR / f"{network}_EoO_msr.xml"
+)
+
+# Rename GDA2020 files
+try:
+    (BASELINES_DIR / f"{network}.GDA2020stn.xml").rename(
+        BASELINES_DIR / f"{network}_stn.xml"
+    )
+
+    (BASELINES_DIR / f"{network}.GDA2020msr.xml").rename(
+        BASELINES_DIR / f"{network}_msr.xml"
+    )
+except:
+    print("Couldn't rename GDA2020 files")
+
+# Remove remaining network.* files
+for file in BASELINES_DIR.glob(f"{network}.*"):
+    file.unlink()
