@@ -114,8 +114,7 @@ for snx in SINEX_DIR.glob('*.AUS'):
 
         # If submitted station is not in the sinex file, log the error and add to removed stations list
         except KeyError:
-            logging.info('Station ' + stn + ' in ' + snx +
-                         ' was submitted but failed processing')
+            logging.info(f'Station {stn} in {snx} was submitted but failed processing')
 
             numStn -= 1
             stnsRemoved.append(stn)
@@ -165,8 +164,7 @@ for snx in SINEX_DIR.glob('*.AUS'):
         rinexantls.unlink()
 
         print(f"Adding log - Sinex deleted, no stations left: {snx}")
-        logging.info(snx + 
-                ' was deleted as it had no submitted stations left.')
+        logging.info(f'{snx} was deleted as it had no submitted stations left.')
 
 logging.shutdown()
 shutil.copyfile(logFile, tempLogFile) # I am not sure yet why this tmp log file exists
