@@ -65,10 +65,10 @@ for JURIS in ${JURIS_LIST[*]}; do
 
     # Run prepFiles.py
     printf "\nexecuting prepFiles.py for ${JURIS^^}...\n"
-    ngca_prepFiles.py
+    ngca_prepFiles.py -j $JURIS
 
     # Identify number of jobs
-    NumJobs=$(ls rinexantls/ | wc -l)    
+    NumJobs=$(ls $SCRIPT_DIR/$JURIS/rinexantls/ | wc -l)    
     printf "\nNumber of jobs for ${JURIS^^}: $NumJobs.\n"
 
     # Identify number of RINEX

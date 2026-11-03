@@ -7,38 +7,24 @@ automatic processing
 
 import re
 import datetime
-from pathlib import Path
+import argparse
+from ngca_path import NGCA_DIR
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-j", "--juris", required=True, help="Jurisdiction to process")
+
+args = parser.parse_args()
+
+# Directory
+JURIS_DIR = NGCA_DIR / args.juris.lower()
+RINEXANTLS_DIR = NGCA_DIR / args.juris.lower() / 'rinexantls'
 
 # Compile the regular expressions
 p1 = re.compile(r'^\w{8}\.\d{2}o$', re.I)
 
 # Create the directory for the individual RINEX antenna information files
-antls_dir = Path('rinexantls')
-antls_dir.mkdir(exist_ok=True)
-
-# Rename files that don't have a '0' before the extension. If renaming will
-# cause a name conflict then rename totally
-
-# renameless 20251111 - Do not rename any input files.
-
-# filenum = 0
-# newFile = {}
-# fout = open('nameChanges.dat', 'w')
-# for f in os.listdir('.'):
-#     if p1.match(f):
-#         if f[7:8] != '0':
-#             new_f = f[:7] + '0' + f[8:]
-#             if os.path.isfile(new_f):
-#                 conflict = True
-#                 while conflict:
-#                     new_f = '{:04d}{}0.{}'.format(filenum, f[4:7], f[9:])
-#                     filenum += 1
-#                     if not os.path.isfile(new_f):
-#                         conflict = False
-#             newFile[f] = new_f
-#             fout.write(f"{new_f} {f}\n")
-#             os.rename(f, new_f)
-# fout.close()
+RINEXANTLS_DIR.mkdir(exist_ok=True)
 
 # this needs to be declared separately, remove if reimplementing renaming above:
 newFile = {}
@@ -112,7 +98,7 @@ while sorted_rnx:
     # Open the cluster RINEX antemnna information file
     rnxantls = rnx0[9:11] + rnx0[4:7] + '_ls'
     
-    rnxantls = Path(rnxantls)
+    rnxantls = RINEXANTLS_DIR / rnxantls
     
     if rnxantls.is_file():
         conflict = True
@@ -144,12 +130,3 @@ while sorted_rnx:
     for line in data:
         fout.write(line[0] + ' ' + line[1] + ' ' + line[2] + '\n')
     fout.close()
-
-# Move antenna information files to rinexantls/
-for file in Path(".").glob("*_ls"):
-    file.rename(antls_dir / file.name)
-
-# Delete nameChanges.dat if empty
-# v2 - do not check / delete
-# if os.stat('nameChanges.dat').st_size == 0:
-#     os.remove('nameChanges.dat')
