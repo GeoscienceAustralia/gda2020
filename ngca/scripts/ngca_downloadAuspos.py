@@ -6,7 +6,7 @@ For job J, checks and downloads:
     https://d1hjwnsodwzynv.cloudfront.net/uploads/J/J.SNX
 
 Files are written to:
-    <root>/<juris>/<archive>/sinexfolder/J.SNX
+    <root>/<juris>/sinexfolder/J.SNX
 """
 
 import argparse
@@ -16,6 +16,7 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from ngca_path import NGCA_DIR
 
 import requests
 
@@ -57,15 +58,16 @@ def arguments():
     parser = argparse.ArgumentParser(
         description="Poll CloudFront and download completed AUSPOS SINEX files."
     )
-    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parent)
     parser.add_argument("--archive", required=True)
     parser.add_argument("-j", "--juris", nargs="+", default=list(DEFAULT_JURIS))
     parser.add_argument("--initial-wait-minutes", type=float, default=30.0)
     parser.add_argument("--poll-minutes", type=float, default=10.0)
     parser.add_argument("--max-wait-hours", type=float, default=24.0)
-    parser.add_argument("--workers", type=int, default=8)
+    parser.add_argument("--workers", type=int, default=2)
     parser.add_argument("--connect-timeout", type=float, default=20.0)
     parser.add_argument("--read-timeout", type=float, default=300.0)
+    parser.add_argument("--run-id", help="Unique NGCA run identifier")
+    parser.add_argument("--dispatch-postprocessing", action="store_true")
     parser.add_argument(
         "--once", action="store_true",
         help="Check once immediately, download ready files, then exit."
@@ -77,14 +79,12 @@ def arguments():
     return parser.parse_args()
 
 
-def read_jobs(root, archive, jurisdictions, overwrite):
+def read_jobs(archive, jurisdictions, overwrite):
     """
     Create a list of jobs that need to have sinex downloaded. If overwrite include all jobs.
     Retruns dictionary of jobs.
 
-    :param root: The root path of NGCA
-    :type root: pathlib.Path
-    :param archive:
+    :param archive: name of archive to be downloaded
     :type archive: str or pathlib.Path
     :param jurisdictions: Juris to be downloaded
     :type jurisdictions: List
@@ -95,19 +95,21 @@ def read_jobs(root, archive, jurisdictions, overwrite):
     """
     
     jobs = []
-    missing_logs = 0
+    missing_logs = set()
 
     # iterate through each juris
     for raw_juris in jurisdictions:
         juris = raw_juris.lower()
-        archive_dir = root / juris / archive
+        
+        juris_dir = NGCA_DIR / juris
+        archive_dir = juris_dir / archive
         log = archive_dir / "auspos_jobs.jsonl"
-        destination = root / juris / "sinexFiles"
+        destination = juris_dir / "sinexFiles"
 
         # Find .jsonl file with all job ids to be downloaded
         if not log.is_file():
             print(f"WARNING: no job log for {juris.upper()}: {log}", file=sys.stderr)
-            missing_logs += 1
+            missing_logs.add(juris)
             continue
 
         # Build sinexFiles folder
@@ -127,8 +129,14 @@ def read_jobs(root, archive, jurisdictions, overwrite):
                 number = str(record.get("job_number") or "").strip()
                 cluster_name = str(record.get("cluster_name") or "").strip()
 
-                if not record.get("ok") or not number or number in seen:
+                if (
+                    not record.get("ok")
+                    or not number
+                    or not cluster_name
+                    or number in seen
+                ):
                     continue
+
 
                 seen.add(number)
 
@@ -162,7 +170,7 @@ def probe(job, connect_timeout: float):
         if response.status_code in (403, 404):
             return job, False, f"HTTP {response.status_code}"
         if response.status_code == 405:
-            return job, None, "HEAD not supported (HTTP 405)"
+            return job, True, "HEAD unupported; attempting GET"
         return job, False, f"HTTP {response.status_code}"
     except requests.RequestException as error:
         return job, False, f"probe error: {error}"
@@ -261,37 +269,168 @@ def parallel_download(jobs, workers, connect_timeout, read_timeout):
             results.append(future.result())
     return results
 
-def check_completed_juris(pending, active_juris, completed_juris):
+def check_completed_juris(
+    pending,
+    active_juris,
+    completed_juris,
+    completion_results,
+    archive,
+    dispatch_enabled,
+    run_id,
+):
     """
-    Check whether each jurisdiction has any jobs left in pending.
+    Detect jurisdictions with no pending downloads.
 
-    If not, mark the jurisdiction complete and run juris_complete().
+    In download-only mode, record that the jurisdiction finished.
 
-    :param pending: List of jobs that still need to be downloaded
-    :type pending: List of Job
-    :param juris: List of Juris being tested
-    :type juris: List
-    :param completed_juris: Set of jruis already completed
-    :type completed_juris: Set
+    In dispatch mode, immediately submit post-processing and
+    record the result.
     """
-    # Iterate through each juris
-    for juris in active_juris:
+    for juris in sorted(active_juris):
         juris = juris.lower()
 
         if juris in completed_juris:
             continue
 
-        # Find if any jobs in pending have a the juris
-        if any(job.juris == juris for job in pending.values()):
+        if any(
+            job.juris == juris
+            for job in pending.values()
+        ):
             continue
 
-        # If no jobs where found add juris to complete and run function
+        try:
+            result = juris_complete(
+                juris=juris,
+                archive=archive,
+                dispatch_enabled=dispatch_enabled,
+                run_id=run_id,
+            )
+
+        except Exception as error:
+
+            print(f"ERROR: failed for {juris.upper()}: {error}", file=sys.stderr,)
+
+            completion_results[juris] = {
+                "jurisdiction": juris,
+                "download_complete": True,
+                "dispatch_requested": dispatch_enabled,
+                "submitted": False,
+                "job_id": None,
+                "message": (f"{type(error).__name__}: {error}"),
+            }
+
+            completed_juris.add(juris)
+            continue
+
+        completion_results[juris] = result
         completed_juris.add(juris)
-        juris_complete(juris)
 
-def juris_complete(juris):
+        if not dispatch_enabled:
+            print(f"COMPLETE {juris.upper()}: all expected SINEX files downloaded")
 
-    print(f"\n>>> {juris.lower()} is completely downloaded <<<")
+        elif result["submitted"]:
+            print(f"DISPATCHED {juris.upper()}: job_id={result['job_id'] or 'placeholder'}"
+            )
+
+        else:
+            print(f"FAILED TO DISPATCH {juris.upper()}: {result['message']}", file=sys.stderr)
+
+def juris_complete(
+    juris,
+    archive,
+    dispatch_enabled,
+    run_id,
+):
+    """
+    Handle a jurisdiction after all expected SINEX files have
+    been downloaded.
+
+    If dispatch_enabled is false, this function only reports
+    completion.
+
+    If dispatch_enabled is true, it imports and calls the
+    post-processing dispatcher.
+    """
+    juris = juris.lower()
+
+    print()
+    print("=" * 70)
+    print(f"{juris.upper()} has downloaded all expected SINEX files")
+
+    if not dispatch_enabled:
+
+        print("=" * 70)
+
+        return {
+            "jurisdiction": juris,
+            "download_complete": True,
+            "dispatch_requested": False,
+            "submitted": False,
+            "job_id": None,
+            "message": "Download completed; dispatch not requested",
+        }
+
+    print(f"Dispatching post-processing for {juris.upper()}...")
+    print("=" * 70)
+
+    # Imported only when dispatch is explicitly requested.
+    from ngca_dispatchPost import dispatch_postprocessing
+
+    result = dispatch_postprocessing(juris,archive,run_id,)
+
+    return {
+        "jurisdiction": juris,
+        "download_complete": True,
+        "dispatch_requested": True,
+        "submitted": bool(result.submitted),
+        "job_id": result.job_id,
+        "message": result.message,
+    }
+
+def finished_exit_code(
+    completion_results,
+    missing_logs,
+    dispatch_enabled,
+):
+    """
+    Return the final downloader status.
+
+    0: Requested downloads completed and any requested dispatches succeeded.
+    1: One or more AUSPOS job logs were missing.
+    3: Downloads completed, but one or more dispatches failed.
+    """
+    if missing_logs:
+        print(
+            "ERROR: One or more jurisdictions had no "
+            "AUSPOS job log",
+            file=sys.stderr,
+        )
+        return 1
+
+    if dispatch_enabled:
+        failed_dispatches = [
+            result
+            for result in completion_results.values()
+            if not result["submitted"]
+        ]
+
+        if failed_dispatches:
+            print(
+                "\nERROR: One or more jurisdictions downloaded "
+                "successfully but failed to dispatch:",
+                file=sys.stderr,
+            )
+
+            for result in failed_dispatches:
+                print(
+                    f"  {result['jurisdiction'].upper()}: "
+                    f"{result['message']}",
+                    file=sys.stderr,
+                )
+
+            return 3
+
+    return 0
 
 def main():
     args = arguments()
@@ -302,20 +441,31 @@ def main():
     if args.max_wait_hours <= 0 and not args.once:
         raise SystemExit("--max-wait-hours must be greater than zero")
 
+    if args.dispatch_postprocessing and not args.run_id:
+        raise SystemExit("--run-id is required when --dispatch-postprocessing is used")
+
     # Find all jobs that need to be downloaded
-    jobs, missing_logs = read_jobs(
-        args.root.expanduser().resolve(), args.archive, args.juris, args.overwrite
-    )
+    jobs, missing_logs = read_jobs(args.archive, args.juris, args.overwrite)
     
     # List of jobs still pending
     pending = {job.number: job for job in jobs}
 
     completed_juris = set()
-    active_juris = {job.juris for job in jobs}
+    active_juris = {juris.lower() 
+                    for juris in args.juris
+                    if juris.lower() not in missing_logs
+    }
 
     print(f"Pending SINEX files: {len(pending)}; parallel workers: {args.workers}")
+
+    completion_results = {}
+    
+    check_completed_juris(pending, active_juris, completed_juris, completion_results, args.archive, args.dispatch_postprocessing, args.run_id)
+    
     if not pending:
-        return 1 if missing_logs else 0
+        print("\nAll available SINEX files have been downloaded.")
+
+        return finished_exit_code(completion_results, missing_logs, args.dispatch_postprocessing)
 
     # Start timer for total wait
     started = time.monotonic()
@@ -326,9 +476,6 @@ def main():
         seconds = args.initial_wait_minutes * 60
         print(f"Initial wait: {args.initial_wait_minutes:g} minute(s)")
         time.sleep(seconds)
-
-    failed_downloads = set()
-
 
     while pending:
         now_text = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -361,15 +508,14 @@ def main():
                     pending.pop(job.number, None)
                     #print(f"DONE    {job.juris.upper()} {job.number}: {detail}")
                 else:
-                    failed_downloads.add(job.number)
                     print(f"FAILED  {job.juris.upper()} {job.number}: {detail}", file=sys.stderr)
 
-            check_completed_juris(pending, active_juris, completed_juris)
+            check_completed_juris(pending, active_juris, completed_juris, completion_results, args.archive, args.dispatch_postprocessing, args.run_id)
 
         # If there are no files left in pending then all have been downloaded
         if not pending:
             print("\nAll SINEX files have been downloaded.")
-            return 0
+            return finished_exit_code(completion_results, missing_logs, args.dispatch_postprocessing)
 
         if pending:
             print(f"Still {len(pending)} job(s) left to be downloaded.")
@@ -391,7 +537,7 @@ def main():
         print(f"Next check in {sleep_seconds / 60:g} minute(s).")
         time.sleep(sleep_seconds)
 
-    return 1 if failed_downloads or missing_logs else 0
+    return 0
 
 
 if __name__ == "__main__":

@@ -178,8 +178,8 @@ for f in sorted(files):
         
         # If the file has passed all the checks write to RinexAntLs.txt
         if good:
-            f = f.rename(f.with_name(f.name.upper()))
-            stns.add(f.name[0:4])
+            #f = f.rename(f.with_name(f.name.upper()))
+            stns.add(f.name[0:4].upper())
             num_rnx += 1
             fout1.write(f"{f.name} {ant} {height}\n")
         
@@ -191,7 +191,7 @@ for f in sorted(files):
             f.unlink()
 
     # Remove if not a RINEX or if the RINEX name is not correctly formed
-    elif f.is_file() and f.name not in ['RinexAntLs.txt', 'verifySub.log', 'durations.dat']:
+    elif f.is_file() and f.name not in ['RinexAntLs.txt', 'verifySub.log', 'durations.dat', 'auspos_jobs.jsonl']:
         logging.info(f"{f.name} : non-RINEX file or bad NGCA RINEX file name")
         f.unlink()
 fout1.close()

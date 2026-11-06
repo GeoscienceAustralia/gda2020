@@ -7,7 +7,7 @@ import sys
 import time
 from contextlib import ExitStack
 from datetime import datetime, timezone
-from pathlib import Path
+from ngca_path import NGCA_DIR
 
 import requests
 
@@ -17,9 +17,8 @@ DEFAULT_JURIS = ("tas", "act", "vic", "sa", "nt", "wa", "nsw", "qld")
 
 def parse_args():
     p = argparse.ArgumentParser()
-    p.add_argument("--root", type=Path, default=Path(__file__).resolve().parent)
     p.add_argument("--archive", required=True)
-    p.add_argument("-j", "--juris", nargs="+", default=list(DEFAULT_JURIS))
+    p.add_argument("-j", "--juris", nargs="+", required=True, type=str.lower, choices=DEFAULT_JURIS)
     p.add_argument("--email", required=True)
     p.add_argument("--api-url", default=DEFAULT_API_URL)
     p.add_argument("--timeout", type=int, default=1800)
@@ -120,7 +119,7 @@ def successful_clusters(log_path):
     return completed
 
 
-def append_record(jsonl_path: Path, record: dict):
+def append_record(jsonl_path, record):
     """
     :param jsonl_path: Path to jsonl file
     :type jsonl_path: pathlib.Path
@@ -196,7 +195,6 @@ def submit_cluster(session, api_url, email, entries, timeout):
 
 def main():
     args = parse_args()
-    root = args.root.expanduser().resolve()
     failures = 0
 
     # Create a HTTP session
@@ -205,28 +203,29 @@ def main():
         # Loop through each juris
         for juris_raw in args.juris:
             
-            # Create required paths
             juris = juris_raw.lower()
-            juris_dir = root / juris
-            rinexantls_dir = juris_dir / "rinexantls"
-            archive_dir = juris_dir / args.archive
-            jsonl_path = archive_dir / "auspos_jobs.jsonl"
 
-            # Check if rinexantls_dir exists
-            if not rinexantls_dir.is_dir():
-                print(f"ERROR: cluster directory not found: {rinexantls_dir}", file=sys.stderr)
+            # Directories
+            JURIS_DIR = NGCA_DIR / juris
+            RINEXANTLS_DIR = JURIS_DIR / 'rinexantls'
+            ARCHIVE_DIR = JURIS_DIR / args.archive
+            jsonl_path = ARCHIVE_DIR / "auspos_jobs.jsonl"
+
+            # Check if RINEXANTLS_DIR exists
+            if not RINEXANTLS_DIR.is_dir():
+                print(f"ERROR: cluster directory not found: {RINEXANTLS_DIR}", file=sys.stderr)
                 failures += 1
                 continue
 
             # Find all cluster files
             clusters = sorted(
-                p for p in rinexantls_dir.iterdir() 
+                p for p in RINEXANTLS_DIR.iterdir() 
                 if p.is_file()
             )
             # Make list of files already submitted if using --resume
             done = successful_clusters(jsonl_path) if args.resume else set()
             
-            print(f"{juris.upper()}: {len(clusters)} cluster file(s) found in {rinexantls_dir}")
+            print(f"{juris.upper()}: {len(clusters)} cluster file(s) found in {RINEXANTLS_DIR}")
 
             # Loop through each cluster
             for cluster_file in clusters:
@@ -234,7 +233,7 @@ def main():
 
                 # skip cluster if already completed
                 if cluster_key in done:
-                    print(f"SKIP {juris.upper()} {cluster_file.name}: already submitted")
+                    #print(f"SKIP {juris.upper()} {cluster_file.name}: already submitted")
                     continue
 
                 # Create job record
@@ -249,7 +248,7 @@ def main():
 
                 try:
                     # Find all files in cluster
-                    entries = read_cluster(cluster_file, archive_dir)
+                    entries = read_cluster(cluster_file, ARCHIVE_DIR)
 
                     # Calculate size of cluster
                     total_bytes = sum(x["path"].stat().st_size for x in entries)
@@ -260,16 +259,22 @@ def main():
                     
                     # Dont submit to AUSPOS if dry run flag is set
                     if args.dry_run:
-                        for x in entries:
-                            print(f"  {x['name']}: antenna_type={x['antenna_type']!r}, height={x['antenna_height']}")
+                        #for x in entries:
+                            #print(f"  {x['name']}: antenna_type={x['antenna_type']!r}, height={x['antenna_height']}")
                         continue
 
                     # Submit to AUSPOS API
                     response, body = submit_cluster(session, args.api_url, args.email, entries, args.timeout)
 
+                    # Check if job number was recieved
+                    job_number = body.get("job_number") if isinstance(body, dict) else None
+
+                    if not job_number:
+                        raise ValueError(f"AUSPOS accepted the request but returned no job number: {body!r}")
+
                     # Get status and job number from response and save to json file
                     record["http_status"] = response.status_code
-                    record["job_number"] = body.get("job_number") if isinstance(body, dict) else None
+                    record["job_number"] = str(job_number)
                     record["ok"] = True
                     append_record(jsonl_path, record)
                     
@@ -291,6 +296,29 @@ def main():
                 # Sleep for set time before sending next request
                 if not args.dry_run and args.pause > 0:
                     time.sleep(args.pause)
+
+    completed = successful_clusters(jsonl_path)
+    expected = {
+        str(cluster_file.resolve())
+        for cluster_file in clusters
+    }
+
+    missing = sorted(expected - completed)
+
+    print(
+        f"{juris.upper()}: expected={len(expected)} "
+        f"submitted={len(completed)} "
+        f"missing={len(missing)}"
+    )
+
+    if missing:
+        failures += len(missing)
+        print(
+            f"ERROR: {juris.upper()} has unsubmitted clusters:",
+            file=sys.stderr,
+        )
+        for cluster in missing:
+            print(f"  {cluster}", file=sys.stderr)
 
     return 1 if failures else 0
 

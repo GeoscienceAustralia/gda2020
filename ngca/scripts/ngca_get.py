@@ -32,18 +32,18 @@ p1 = re.compile(r'\w{8}\.\d{2}o$', re.I)
 # Get today's date in the format YYYYMMDD
 today = str(datetime.today())
 archiveDate = today[0:10].replace('-','')
-print(archiveDate)
+print(archiveDate, flush=True)
 
 # Loop over the jurisdictions
 for jur in juris:
-    print('* Processing ' + jur.upper())
+    print('* Processing ' + jur.upper(), flush=True)
 
     # Create the archive directory
     archive_dir = NGCA_DIR / jur / archiveDate
     archive_dir.mkdir(parents=True, exist_ok=True)
 
     # Download the files
-    print('* Downloading files')
+    print('* Downloading files', flush=True)
 
     subprocess.run(["aws", "s3", "cp", 
                     f"s3://gda2020-ngca/ngca/{jur.lower()}/" ,
@@ -51,7 +51,7 @@ for jur in juris:
                    )
 
     # Deleting old data
-    print('* Deleting old SINEX files and RINEX antenna information files')
+    print('* Deleting old SINEX files and RINEX antenna information files', flush=True)
         
     for folder in ["rinexantls", "sinexFiles"]:
         ngca_fold_path = NGCA_DIR / jur / folder

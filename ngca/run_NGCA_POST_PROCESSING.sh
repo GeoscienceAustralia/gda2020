@@ -27,9 +27,18 @@ while [[ $# -gt 0 ]]; do
             ARCHIVE="$1"
             shift
             ;;
+        -c|--cpu)
+            shift
+            if [[ $# -eq 0 || ! "$1" =~ ^[1-9][0-9]*$ ]]; then
+                echo "Error: --cpu requires a positive integer"
+                exit 1
+            fi
+            CPUS="$1"
+            shift
+            ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: $0 -j tas act nsw -a 20260825"
+            echo "Usage: $0 -j tas act nsw -a 20260825 [-c CPUS]"
             exit 1
             ;;
     esac
