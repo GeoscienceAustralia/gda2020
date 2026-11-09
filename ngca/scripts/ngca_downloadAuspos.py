@@ -67,6 +67,7 @@ def arguments():
     parser.add_argument("--connect-timeout", type=float, default=20.0)
     parser.add_argument("--read-timeout", type=float, default=300.0)
     parser.add_argument("--run-id", help="Unique NGCA run identifier")
+    parser.add_argument("--s3-bucket", help="S3 bucket for backup file to be stored")
     parser.add_argument("--dispatch-postprocessing", action="store_true")
     parser.add_argument(
         "--once", action="store_true",
@@ -277,6 +278,7 @@ def check_completed_juris(
     archive,
     dispatch_enabled,
     run_id,
+    s3_bucket
 ):
     """
     Detect jurisdictions with no pending downloads.
@@ -304,6 +306,7 @@ def check_completed_juris(
                 archive=archive,
                 dispatch_enabled=dispatch_enabled,
                 run_id=run_id,
+                s3_bucket=s3_bucket
             )
 
         except Exception as error:
@@ -340,6 +343,7 @@ def juris_complete(
     archive,
     dispatch_enabled,
     run_id,
+    s3_bucket
 ):
     """
     Handle a jurisdiction after all expected SINEX files have
@@ -376,7 +380,7 @@ def juris_complete(
     # Imported only when dispatch is explicitly requested.
     from ngca_dispatchPost import dispatch_postprocessing
 
-    result = dispatch_postprocessing(juris,archive,run_id,)
+    result = dispatch_postprocessing(juris,archive,run_id, s3_bucket)
 
     return {
         "jurisdiction": juris,
@@ -460,7 +464,7 @@ def main():
 
     completion_results = {}
     
-    check_completed_juris(pending, active_juris, completed_juris, completion_results, args.archive, args.dispatch_postprocessing, args.run_id)
+    check_completed_juris(pending, active_juris, completed_juris, completion_results, args.archive, args.dispatch_postprocessing, args.run_id, args.s3_bucket)
     
     if not pending:
         print("\nAll available SINEX files have been downloaded.")
@@ -510,7 +514,7 @@ def main():
                 else:
                     print(f"FAILED  {job.juris.upper()} {job.number}: {detail}", file=sys.stderr)
 
-            check_completed_juris(pending, active_juris, completed_juris, completion_results, args.archive, args.dispatch_postprocessing, args.run_id)
+            check_completed_juris(pending, active_juris, completed_juris, completion_results, args.archive, args.dispatch_postprocessing, args.run_id, args.s3_bucket)
 
         # If there are no files left in pending then all have been downloaded
         if not pending:

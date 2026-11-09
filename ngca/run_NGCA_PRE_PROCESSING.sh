@@ -223,7 +223,7 @@ restore_auspos_state() {
     fi
 
     jsonl_path="$SCRIPT_DIR/$jurisdiction/$ARCHIVE/auspos_jobs.jsonl"
-    object_key="${RUN_ID}/${jurisdiction}/${ARCHIVE}/auspos_jobs.jsonl"
+    object_key="NGCA/batch_jobs/${jurisdiction}/${RUN_ID}/auspos_jobs.jsonl"
 
     if aws s3api head-object \
         --bucket "$NGCA_RUN_BUCKET" \
@@ -261,7 +261,7 @@ save_auspos_state() {
     fi
 
     jsonl_path="$SCRIPT_DIR/$jurisdiction/$ARCHIVE/auspos_jobs.jsonl"
-    object_key="${RUN_ID}/${jurisdiction}/${ARCHIVE}/auspos_jobs.jsonl"
+    object_key="NGCA/batch_jobs/${jurisdiction}/${RUN_ID}/auspos_jobs.jsonl"
 
     if [[ ! -s "$jsonl_path" ]]; then
         log ERROR "$jurisdiction" AUSPOS_STATE \
@@ -455,7 +455,8 @@ run_auspos_downloader() {
         --workers \
             "${AUSPOS_DOWNLOAD_WORKERS:-2}" \
         --run-id "$RUN_ID" \
-        --dispatch-postprocessing
+        --dispatch-postprocessing \
+        --s3-bucket "$NGCA_RUN_BUCKET"
     then
         downloader_exit=0
 
@@ -654,7 +655,7 @@ if [[ -z "$EMAIL" ]]; then
 fi
 
 if [[ -z "$RUN_ID" ]]; then
-    RUN_ID="ngca-$(date -u +%Y%m%dT%H%M%SZ)"
+    RUN_ID="ngca-$(date -u +%Y%m%dT%H%M)"
 fi
 
 if [[ ! "$AUSPOS_SUBMISSION_DELAY_SECONDS" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
