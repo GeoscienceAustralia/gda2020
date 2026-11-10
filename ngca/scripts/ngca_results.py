@@ -16,12 +16,16 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument("-j", "--juris", required=True, help="Jurisdiction to process")
 parser.add_argument("-a", "--archive", required=True, help="Archive folder to be processed")
+parser.add_argument("-d", "--destination", required=True, help="S3 destination to save results")
+parser.add_argument("--dry_run", help="Complete process without interacting with S3 bucket", default=False, type=bool)
 
 args = parser.parse_args()
 
 jur = args.juris.lower()
 jur_upper = jur.upper()
 date = args.archive.strip()
+dry_run = args.dry_run
+s3_destination = args.destination
 
 # Directory
 JURIS_DIR = NGCA_DIR / args.juris.lower()
@@ -53,10 +57,6 @@ XYZ_DIR = CAMPAIGN_DIR / "xyz"
 CAMPAIGN_SNX_DIR = CAMPAIGN_DIR / "snx"
 CLUSTERS_DIR = CAMPAIGN_DIR / "clusters"
 
-# S3 file location
-#S3_DESTINATION = "s3://gda2020-ngca/2025_Testing/Portal/"
-S3_DESTINATION = "s3://gda2020-ngca/2026_Testing/NGCA/"
-dry_run = True
 
 print(f"Preparing NGCA: {campaign}")
 
@@ -216,7 +216,7 @@ if not dry_run:
             "aws",
             "s3",
             "rm",
-            S3_DESTINATION,
+            s3_destination,
             "--quiet",
             "--recursive",
             "--exclude",
@@ -237,7 +237,7 @@ subprocess.run(
         "s3",
         "cp",
         str(created_archive),
-        S3_DESTINATION,
+        s3_destination,
         "--quiet",
     ],
     check=True,

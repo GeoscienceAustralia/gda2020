@@ -401,13 +401,9 @@ process_jurisdiction() {
         #--dry-run # tmp while testing
     then
         submit_exit=0
-        #log INFO "$jurisdiction" AUSPOS_SUBMISSION "Every expected cluster has been submitted"
     else
         submit_exit=$?
 
-        #mark_jurisdiction_failed "$jurisdiction" AUSPOS_SUBMISSION "ngca_submitClusters.py failed with exit code $stage_exit"
-
-        #return 1
     fi
 
     # Save the complete or partial auspos submission list
