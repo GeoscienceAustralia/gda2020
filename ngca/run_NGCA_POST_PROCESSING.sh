@@ -348,6 +348,7 @@ run_stage() {
     local jurisdiction="$1"
     local stage="$2"
     local description="$3"
+    local exit_code
 
     shift 3
 
@@ -358,16 +359,16 @@ run_stage() {
             "$description completed successfully"
 
         return 0
+    else
+        exit_code=$?
+
+        mark_jurisdiction_failed \
+            "$jurisdiction" \
+            "$stage" \
+            "$description failed with exit code $exit_code"
+
+        return "$exit_code"
     fi
-
-    local exit_code=$?
-
-    mark_jurisdiction_failed \
-        "$jurisdiction" \
-        "$stage" \
-        "$description failed with exit code $exit_code"
-
-    return "$exit_code"
 }
 
 process_jurisdiction() {
