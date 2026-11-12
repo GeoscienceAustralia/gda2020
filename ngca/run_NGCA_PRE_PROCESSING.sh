@@ -480,7 +480,7 @@ run_auspos_downloader() {
         --run-id "$RUN_ID" \
     )
 
-    if [[ -n "$NGCA_RUN_BUCKET" ]];; then
+    if [[ -n "$NGCA_RUN_BUCKET" ]]; then
         downloader_args+=( --s3-bucket "$NGCA_RUN_BUCKET")
     fi
 
