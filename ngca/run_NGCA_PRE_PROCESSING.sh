@@ -25,11 +25,14 @@ EMAIL=""
 RUN_ID=""
 ARCHIVE=""
 PROCESS_ALL=false
+DISPATCH_POSTPROCESSING=false
 
 
 # These can be supplied through the AWS Batch job definition.
 AUSPOS_SUBMISSION_DELAY_SECONDS="${AUSPOS_SUBMISSION_DELAY_SECONDS:-0.1}"
 NGCA_RUN_BUCKET="${NGCA_RUN_BUCKET:-}"
+POSTPROCESS_QUEUE="${POSTPROCESS_QUEUE:-}"
+POSTPROCESS_JOB_DEFINITION="${POSTPROCESS_JOB_DEFINITION:-}"
 
 # Per-jurisdiction processing state.
 declare -A JURIS_STATUS
@@ -55,11 +58,26 @@ Options:
       --all              Process all jurisdictions
   -e, --email ADDRESS    Email address supplied to AUSPOS
   -r, --run-id VALUE     Unique run identifier
+      --dispatch-postprocessing
+                         Submit a post-processing AWS Batch job after
+                         each jurisdiction package is uploaded to S3.
+                         Without this flag, packages are uploaded only.
   -h, --help             Show this help
 
 Environment variables:
   AUSPOS_SUBMISSION_DELAY_SECONDS
       Delay between AUSPOS submissions. Default: 0.1 seconds.
+
+  NGCA_RUN_BUCKET
+      Optional bucket used for resumable state and packaged inputs
+
+  POSTPROCESS_QUEUE
+      AWS Batch post-processing job queue. Required when 
+      --dispatch-postprocessing is used
+
+  POSTPROCESS_JOB_DEFINITION
+      AWS Batch post-processing job definition. Required when
+      --dispatch-postprocessing is used
 EOF
 }
 
@@ -169,13 +187,21 @@ mark_jurisdiction_submitted() {
 # Change variables to show jurisdiction has successed
 mark_jurisdiction_complete() {
     local jurisdiction="$1"
+    local message
 
     JURIS_STATUS["$jurisdiction"]="SUCCEEDED"
     JURIS_FAILED_STAGE["$jurisdiction"]=""
     JURIS_MESSAGE["$jurisdiction"]=""
 
-    log INFO "$jurisdiction" COMPLETE \
-        "All Sinex files downloaded from AUSPOS"
+    if "$DISPATCH_POSTPROCESSING"; then
+        message="SINEX files downloaded, package uploaded, and post-processing job submitted"
+    elif [[ -n "$NGCA_RUN_BUCKET" ]]; then
+        message="SINEX files downloaded and post-processing package uploaded to S3"
+    else
+        message="SINEX files downloaded; outputs remain local"
+    fi
+
+    log INFO "$jurisdiction" COMPLETE "$message"
 }
 
 # Counts files in a directory
@@ -428,6 +454,7 @@ process_jurisdiction() {
 run_auspos_downloader() {
     local downloader_exit
     local jurisdiction
+    local -a downloader_args
 
     if ((${#SUBMITTED_JURIS[@]} == 0)); then
         log ERROR NONE AUSPOS_DOWNLOAD \
@@ -439,7 +466,7 @@ run_auspos_downloader() {
     log INFO NONE AUSPOS_DOWNLOAD \
         "Monitoring jurisdictions: ${SUBMITTED_JURIS[*]^^}"
 
-    if ngca_downloadAuspos.py \
+    downloader_args=(
         --archive "$ARCHIVE" \
         --juris "${SUBMITTED_JURIS[@]}" \
         --initial-wait-minutes \
@@ -451,9 +478,21 @@ run_auspos_downloader() {
         --workers \
             "${AUSPOS_DOWNLOAD_WORKERS:-2}" \
         --run-id "$RUN_ID" \
-        --dispatch-postprocessing \
-        --s3-bucket "$NGCA_RUN_BUCKET"
-    then
+    )
+
+    if [[ -n "$NGCA_RUN_BUCKET" ]];; then
+        downloader_args+=( --s3-bucket "$NGCA_RUN_BUCKET")
+    fi
+
+    if "$DISPATCH_POSTPROCESSING"; then
+        downloader_args+=( --dispatch-postprocessing)
+
+        log INFO NONE POSTPROCESS_DISPATCH "Automatic post-processing enabled queue=$POSTPROCESS_QUEUE"
+    else
+        log INFO NONE POSTPROCESS_DISPATCH "Automatic post_processing dispatch disabled"
+    fi
+
+    if ngca_downloadAuspos.py "${downloader_args[@]}"; then
         downloader_exit=0
 
         for jurisdiction in "${SUBMITTED_JURIS[@]}"; do
@@ -609,6 +648,11 @@ while (($# > 0)); do
             shift 2
             ;;
 
+        --dispatch-postprocessing)
+            DISPATCH_POSTPROCESSING=true
+            shift
+            ;;
+        
         -h|--help)
             usage
             exit 0
@@ -652,6 +696,29 @@ fi
 
 if [[ -z "$RUN_ID" ]]; then
     RUN_ID="ngca-$(date -u +%Y%m%dT%H%M)"
+fi
+
+if "$DISPATCH_POSTPROCESSING"; then
+    if [[ -z "$NGCA_RUN_BUCKET" ]]; then
+        fail_controller \
+            STARTUP_VALIDATION \
+            "--dispatch-postprocessing requires NGCA_RUN_BUCKET" \
+            64
+    fi
+
+    if [[ -z "$POSTPROCESS_QUEUE" ]]; then
+        fail_controller \
+            STARTUP_VALIDATION \
+            "--dispatch-postprocessing requires POSTPROCESS_QUEUE" \
+            64
+    fi
+
+    if [[ -z "$POSTPROCESS_JOB_DEFINITION" ]]; then
+        fail_controller \
+            STARTUP_VALIDATION \
+            "--dispatch-postprocessing requires POSTPROCESS_JOB_DEFINITION" \
+            64
+    fi
 fi
 
 if [[ ! "$AUSPOS_SUBMISSION_DELAY_SECONDS" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
