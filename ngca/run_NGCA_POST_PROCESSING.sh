@@ -160,10 +160,10 @@ postprocess_object_key() {
 
     run_suffix="${RUN_ID#ngca-}"
 
-    printf 'NGCA/batch_jobs/%s/%s/NGCA-%s-%s.zip' \
+    printf 'NGCA/batch_jobs/%s/%s/ngca-%s-%s.zip' \
         "$jurisdiction" \
         "$RUN_ID" \
-        "${jurisdiction^^}" \
+        "$jurisdiction" \
         "$run_suffix"
 }
 
@@ -187,7 +187,7 @@ restore_postprocessing_input() {
     object_key="$(postprocess_object_key "$jurisdiction")"
 
     temporary_directory="$(mktemp -d)"
-    zip_file="$temporary_directory/NGCA-${jurisdiction^^}-${RUN_ID}.zip"
+    zip_file="$temporary_directory/ngca-${jurisdiction}-${RUN_ID}.zip"
 
     log INFO "$jurisdiction" INPUT_RESTORE \
         "Downloading s3://${NGCA_RUN_BUCKET}/${object_key}"
